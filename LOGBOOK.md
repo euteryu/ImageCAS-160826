@@ -207,6 +207,12 @@ Report the command output and displayed three-row table back to Codex.
 
 ## Run notes
 
+### 2026-08-17 — Kaggle session reset and long-cell paste failure
+
+The Kaggle session reset after a pause, deleting `/kaggle/working/ImageCAS-160826` and the generated smoke dataset. A subsequent attempt to recreate everything with one long shell command was split during copy/paste, causing Python to interpret shell text and raise `SyntaxError: invalid decimal literal`.
+
+Decision: stop sending long compound notebook commands. `kaggle/bootstrap_smoke.sh` now owns cloning/pulling, installation, archive-link inspection, smoke-dataset recreation, and stack verification. The notebook should only download that script and execute it using short cells.
+
 ### 2026-08-17 — Kaggle cell delivery changed to committed scripts
 
 The user reported that copying multiline code from chat into Kaggle introduced incorrect indentation from the second line onward. A dedicated `kaggle/` directory was added. Future notebook actions should normally be delivered as one-line commands such as `!python kaggle/01_verify_stack.py`, with the implementation reviewed and versioned in GitHub/local VS Code.
