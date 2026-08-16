@@ -205,6 +205,20 @@ Report the command output and displayed three-row table back to Codex.
 
 ## Run notes
 
+### 2026-08-16 — Timed 20-case audit continuation passed
+
+The archive audit resumed after the first three cases and processed cases 4–23:
+
+```text
+already completed: 3
+newly audited: 20
+total completed: 23
+warning cases: 0
+wall time: 5 minutes 4 seconds
+```
+
+Observed throughput was approximately 15.2 seconds per case. At that rate, the remaining 977 cases should require roughly 4 hours 8 minutes on CPU. Decision: resource use and throughput are acceptable for a full resumable audit in the current Kaggle session; GPU remains unnecessary.
+
 ### 2026-08-16 — Official Split-1 validation passed
 
 The `v2-latest` workbook parser validated official Split-1 independently of the partial audit CSV:
