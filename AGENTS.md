@@ -19,6 +19,7 @@ Build a reproducible and auditable ImageCAS-to-nnU-Net v2 coronary segmentation 
 - Prefer resumable, case-wise archive processing because Kaggle working storage is 20 GB and each shard is about 17 GB.
 - The project owner waived the full 1,000-case audit after cases 1–23 passed. Never describe Gate A or the full dataset audit as passed; describe it as an explicit accepted-risk waiver.
 - Update `LOGBOOK.md` after each meaningful Kaggle result, unexpected issue, strategy change, or completed milestone.
+- Put Kaggle-executed implementation code in numbered scripts under `kaggle/`. Give the user one-line notebook commands instead of multiline Python cells because pasted indentation is unreliable in their workflow.
 
 ## Current task
 

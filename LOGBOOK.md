@@ -20,6 +20,7 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 5. The target is called the **ImageCAS binary coronary-artery reference mask** until visual QC establishes its precise annotation semantics.
 6. The eventual baseline must include overlap, surface, and topology evaluation—not Dice alone.
 7. The project owner explicitly waived the complete 1,000-case audit on 2026-08-16. This is an accepted risk, not evidence that the dataset passed full validation.
+8. Kaggle notebook instructions should be one-line commands that run version-controlled scripts under `kaggle/`; avoid asking the user to paste multiline, indentation-sensitive Python.
 
 ## Chronological record
 
@@ -205,6 +206,12 @@ Report the command output and displayed three-row table back to Codex.
 - Pass Gate A before enabling model training.
 
 ## Run notes
+
+### 2026-08-17 — Kaggle cell delivery changed to committed scripts
+
+The user reported that copying multiline code from chat into Kaggle introduced incorrect indentation from the second line onward. A dedicated `kaggle/` directory was added. Future notebook actions should normally be delivered as one-line commands such as `!python kaggle/01_verify_stack.py`, with the implementation reviewed and versioned in GitHub/local VS Code.
+
+The current P100 session does not need a pull merely to rerun already-cloned code. A pull is required now only because the new Kaggle helper directory and stack-verification script were just added.
 
 ### 2026-08-16 — Dataset599 smoke raw build passed on Kaggle P100
 
