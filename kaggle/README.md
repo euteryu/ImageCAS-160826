@@ -9,7 +9,7 @@ Do not paste multiline Python implementations into Kaggle cells. Pull the reposi
 ## Current next command
 
 ```python
-!python kaggle/01_verify_stack.py
+!bash /kaggle/working/ImageCAS-160826/kaggle/02_plan_preprocess_smoke.sh
 ```
 
 ## Standard update command
@@ -21,4 +21,3 @@ Run this only when Codex says a new script or code change was pushed:
 ```
 
 `git pull` is not required between cells when the relevant script was already present in the current clone.
-

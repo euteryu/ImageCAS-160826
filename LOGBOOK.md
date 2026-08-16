@@ -207,6 +207,12 @@ Report the command output and displayed three-row table back to Codex.
 
 ## Run notes
 
+### 2026-08-17 — T4 stack and executable CUDA kernel passed
+
+The smoke environment was rebuilt on a Tesla T4. Verified versions were nnU-Net 2.8.1, PyTorch 2.10.0+cu128, NumPy 2.5.2, SciPy 1.16.3, and NiBabel 5.4.2. The corrected checker successfully allocated a CUDA tensor, ran an operation, synchronized the device, and reported `CUDA kernel test: PASS`.
+
+Decision: accept T4 as the smoke-training GPU. Proceed to nnU-Net dataset-integrity verification, fingerprint extraction, default experiment planning, and only the `3d_fullres` preprocessing configuration. Use two processes for fingerprinting and preprocessing to limit RAM pressure.
+
 ### 2026-08-17 — P100 rejected by installed PyTorch architecture support
 
 The rebuilt smoke dataset passed and the installed stack reported nnU-Net 2.8.1, PyTorch 2.10.0+cu128, NumPy 2.5.2, SciPy 1.16.3, and NiBabel 5.4.2. PyTorch could see the Tesla P100, but warned that the wheel supports CUDA architectures `sm_70` through `sm_120` while the P100 is `sm_60`.
