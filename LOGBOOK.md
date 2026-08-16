@@ -207,6 +207,12 @@ Report the command output and displayed three-row table back to Codex.
 
 ## Run notes
 
+### 2026-08-17 — Corrected advice about closing an interactive Kaggle session
+
+Codex initially stated too confidently that an interactively running cell could be left by closing the browser and checked later. Kaggle documentation says interactive sessions may remain active until their idle timeout, and optional file persistence is best-effort; this is not the reliable mechanism for an unattended run. Kaggle staff recommends **Save & Run All** for background execution that may safely continue after the browser closes.
+
+Decision: use a new clean notebook and `Save & Run All` for unattended smoke training. `kaggle/run_smoke_end_to_end.sh` reproduces bootstrap, smoke-data construction, planning/preprocessing, one-epoch training, validation, and reports from a clean session. Do not use the exploratory notebook's accumulated cells for a background commit.
+
 ### 2026-08-17 — Smoke planning and 3d_fullres preprocessing passed
 
 nnU-Net verified the 20-case raw dataset, extracted its fingerprint, created default plans, and preprocessed all cases for `3d_fullres` in 9 minutes 4 seconds. The custom split was installed successfully.
