@@ -7,7 +7,7 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 - Phase: IMG-CAS-001 — dataset discovery and audit
 - Training status: **not started**
 - GPU required now: **no**
-- Current checkpoint: run a three-case archive audit smoke test
+- Current checkpoint: audit waiver accepted; determine a storage-feasible nnU-Net data pipeline on Kaggle
 - Repository: <https://github.com/euteryu/ImageCAS-160826>
 - Kaggle dataset: <https://www.kaggle.com/datasets/xiaoweixumedicalai/imagecas>
 
@@ -19,6 +19,7 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 4. We use the official ImageCAS Split-1 and later isolate its 250 test cases from nnU-Net fingerprinting and preprocessing.
 5. The target is called the **ImageCAS binary coronary-artery reference mask** until visual QC establishes its precise annotation semantics.
 6. The eventual baseline must include overlap, surface, and topology evaluation—not Dice alone.
+7. The project owner explicitly waived the complete 1,000-case audit on 2026-08-16. This is an accepted risk, not evidence that the dataset passed full validation.
 
 ## Chronological record
 
@@ -204,6 +205,29 @@ Report the command output and displayed three-row table back to Codex.
 - Pass Gate A before enabling model training.
 
 ## Run notes
+
+### 2026-08-16 — Full 1,000-case audit explicitly waived
+
+After the 23-case validation and timing run, the projected full CPU audit time was approximately four hours. An unattended clean Kaggle notebook was proposed to verify all 1,000 pairs overnight.
+
+The project owner explicitly decided **not** to run that full audit and to trust the dataset owners regarding:
+
+- all 1,000 image/mask pairs opening correctly;
+- absence of corrupted files;
+- matching image/mask physical geometry;
+- binary mask values;
+- absence of other case-level integrity failures.
+
+This decision advances the project faster but accepts the risk that an undiscovered bad case may later crash preprocessing/training or compromise evaluation. The audit gate is therefore **waived**, not passed. Evidence actually obtained remains limited to:
+
+- all five multipart archives opened successfully;
+- their directory listings contained 1,000 apparent image/mask pairs;
+- official Split-1 validated as 700/50/250;
+- cases 1–23 audited successfully with zero warnings.
+
+If a later pipeline failure suggests bad input data, reinstate the resumable audit rather than silently repairing or excluding cases.
+
+Revised next step: determine how to stage raw and preprocessed nnU-Net data within Kaggle's observed 20 GB writable-disk limit. The original archives total 83 GB, so ordinary full extraction into `/kaggle/working` is not feasible.
 
 ### 2026-08-16 — Timed 20-case audit continuation passed
 

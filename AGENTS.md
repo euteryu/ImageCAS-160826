@@ -1,6 +1,6 @@
 # Codex project instructions
 
-Read `LOGBOOK.md` before changing this repository. Treat its **Current status**, **Fixed project decisions**, and **Current next action** as the durable project handover.
+Read `LOGBOOK.md` before changing this repository. Treat its **Current status**, **Fixed project decisions**, and latest **Run notes** as the durable project handover.
 
 ## Purpose
 
@@ -11,21 +11,18 @@ Build a reproducible and auditable ImageCAS-to-nnU-Net v2 coronary segmentation 
 - Keep ImageCAS patient data on Kaggle. Never request or create a local laptop copy.
 - Never commit NIfTI data, extracted cases, patient-derived QC images, nnU-Net arrays, predictions, or checkpoints.
 - GitHub is the source of truth for code; Kaggle notebooks are thin execution environments.
-- Keep the Kaggle GPU disabled until CPU-only data and pipeline gates require training.
+- Keep the Kaggle GPU disabled until CPU-only preparation is complete and training is ready.
 - Use official workbook sheet `v2-latest`; archive case IDs are 1–1000.
 - Preserve image/mask physical geometry. Do not silently resize or repair mismatches.
 - Isolate official Split-1 test labels from nnU-Net fingerprinting/preprocessing in the later builder.
 - Refer to labels as the “ImageCAS binary coronary-artery reference mask” until visual QC establishes stronger semantics.
 - Prefer resumable, case-wise archive processing because Kaggle working storage is 20 GB and each shard is about 17 GB.
+- The project owner waived the full 1,000-case audit after cases 1–23 passed. Never describe Gate A or the full dataset audit as passed; describe it as an explicit accepted-risk waiver.
 - Update `LOGBOOK.md` after each meaningful Kaggle result, unexpected issue, strategy change, or completed milestone.
 
-## Current command to validate
+## Current task
 
-```bash
-python scripts/02_audit_archives.py --limit 3
-```
-
-Do not start a full 1,000-case audit until the three-case result has been reviewed.
+Design and validate a Kaggle-feasible raw/preprocessed data staging strategy. The attached archives total 83 GB while `/kaggle/working` has 20 GB, so a conventional full extraction is impossible.
 
 ## Verification
 
