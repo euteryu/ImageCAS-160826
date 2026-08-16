@@ -203,6 +203,14 @@ Report the command output and displayed three-row table back to Codex.
 - Review annotation semantics and outliers manually.
 - Pass Gate A before enabling model training.
 
+## Run notes
+
+### 2026-08-16 — Audit CSV read attempted before audit execution
+
+After pulling the logbook commit in Kaggle, `pd.read_csv("artifacts/data_audit.csv")` raised `FileNotFoundError`. This was expected because `git pull` retrieves source-controlled files only; the generated audit CSV is deliberately not committed and `scripts/02_audit_archives.py --limit 3` had not yet been run.
+
+Resolution: run the three-case audit command first, then load its generated CSV. This was a command-order issue, not a dataset or code failure.
+
 ## How to maintain this logbook
 
 For each meaningful run, append:
@@ -216,4 +224,3 @@ For each meaningful run, append:
 7. Exact next action.
 
 Keep raw patient data, NIfTI files, and patient-derived images out of Git. Summary statistics, code, commands, and non-identifying engineering observations may be recorded here.
-
