@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -23,6 +24,7 @@ def main() -> None:
 
     nifti = []
     workbooks = []
+    archives = []
     datasets = []
     if args.input_root.exists():
         datasets = sorted(str(path) for path in args.input_root.iterdir() if path.is_dir())
@@ -34,6 +36,8 @@ def main() -> None:
                 nifti.append(str(path))
             elif lower.endswith((".xlsx", ".xls", ".csv")):
                 workbooks.append(str(path))
+            elif lower.endswith((".zip", ".change2zip")) or re.search(r"\.z\d{2}$", lower):
+                archives.append(str(path))
 
     report = {
         "python": sys.version,
@@ -43,6 +47,8 @@ def main() -> None:
         "nifti_count": len(nifti),
         "nifti_examples": nifti[:20],
         "split_file_candidates": workbooks,
+        "archive_count": len(archives),
+        "archive_examples": archives[:30],
         "nvidia_smi": command_output(
             ["nvidia-smi", "--query-gpu=name,memory.total,driver_version", "--format=csv,noheader"]
         ),
