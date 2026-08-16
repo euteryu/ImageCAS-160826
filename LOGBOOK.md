@@ -206,6 +206,21 @@ Report the command output and displayed three-row table back to Codex.
 
 ## Run notes
 
+### 2026-08-16 — Dataset599 smoke raw build passed on Kaggle P100
+
+`Dataset599_ImageCAS_SMOKE` was built successfully from cases 1–20:
+
+```text
+training cases: 16
+validation cases: 4
+raw dataset size: 1.8 GB
+Kaggle writable disk remaining: 18 GB
+GPU: Tesla P100-PCIE-16GB (16,384 MiB)
+status: PASS
+```
+
+The install selected nnU-Net v2.8.1. Pip upgraded NumPy to 2.5.2 and reported compatibility warnings for unrelated preinstalled Kaggle packages including `numba`, `ydata-profiling`, `google-colab`, and others. These warnings are not yet classified as failures. Decision: run focused imports and CUDA checks for the actual smoke pipeline dependencies before planning/preprocessing; only change versions if those checks demonstrate a real incompatibility.
+
 ### 2026-08-16 — Smoke dataset builder implemented
 
 A storage-bounded builder was added for `Dataset599_ImageCAS_SMOKE`. It selects the first 20 IDs assigned to training in official Split-1, extracts only those cases, preserves their original NIfTI geometry, renames them into nnU-Net v2 format, and produces:
