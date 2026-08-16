@@ -207,6 +207,26 @@ Report the command output and displayed three-row table back to Codex.
 
 ## Run notes
 
+### 2026-08-17 — Smoke planning and 3d_fullres preprocessing passed
+
+nnU-Net verified the 20-case raw dataset, extracted its fingerprint, created default plans, and preprocessed all cases for `3d_fullres` in 9 minutes 4 seconds. The custom split was installed successfully.
+
+Key plan:
+
+```text
+median and target spacing: 0.5 × 0.3525390625 × 0.3525390625 mm
+median cropped shape: 275 × 512 × 512 voxels
+median relative size after cropping: 1.0
+patch size: 96 × 160 × 160
+batch size: 2
+training/validation: 16/4
+raw size: 1.8 GB
+preprocessed size: 3.0 GB
+remaining writable disk: 15 GB
+```
+
+The crop ratio of 1.0 shows that default foreground cropping does not reduce these volumes. Decision: run the official built-in `nnUNetTrainer_1epoch` debugging trainer on fold 0 using one T4. This is a pipeline test only, not a performance experiment.
+
 ### 2026-08-17 — T4 stack and executable CUDA kernel passed
 
 The smoke environment was rebuilt on a Tesla T4. Verified versions were nnU-Net 2.8.1, PyTorch 2.10.0+cu128, NumPy 2.5.2, SciPy 1.16.3, and NiBabel 5.4.2. The corrected checker successfully allocated a CUDA tensor, ran an operation, synchronized the device, and reported `CUDA kernel test: PASS`.

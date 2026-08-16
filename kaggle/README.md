@@ -9,7 +9,7 @@ Do not paste multiline Python implementations into Kaggle cells. Pull the reposi
 ## Current next command
 
 ```python
-!bash /kaggle/working/ImageCAS-160826/kaggle/02_plan_preprocess_smoke.sh
+!bash /kaggle/working/ImageCAS-160826/kaggle/03_train_smoke.sh
 ```
 
 ## Standard update command
