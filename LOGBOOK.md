@@ -207,6 +207,14 @@ Report the command output and displayed three-row table back to Codex.
 
 ## Run notes
 
+### 2026-08-17 — P100 rejected by installed PyTorch architecture support
+
+The rebuilt smoke dataset passed and the installed stack reported nnU-Net 2.8.1, PyTorch 2.10.0+cu128, NumPy 2.5.2, SciPy 1.16.3, and NiBabel 5.4.2. PyTorch could see the Tesla P100, but warned that the wheel supports CUDA architectures `sm_70` through `sm_120` while the P100 is `sm_60`.
+
+The original stack checker incorrectly printed `STATUS: PASS` because it tested only `torch.cuda.is_available()` and the device name. It did not execute a CUDA kernel. The checker was corrected to allocate a CUDA tensor, perform an operation, and synchronize before passing.
+
+Decision: do not use the P100 with this installed PyTorch build. Switch the Kaggle accelerator to T4 (`sm_75`), which falls within the wheel's reported supported range, and rerun the bootstrap after the inevitable session reset. Avoid downloading and pinning a separate legacy PyTorch/CUDA stack unless T4 is unavailable.
+
 ### 2026-08-17 — Kaggle session reset and long-cell paste failure
 
 The Kaggle session reset after a pause, deleting `/kaggle/working/ImageCAS-160826` and the generated smoke dataset. A subsequent attempt to recreate everything with one long shell command was split during copy/paste, causing Python to interpret shell text and raise `SyntaxError: invalid decimal literal`.
