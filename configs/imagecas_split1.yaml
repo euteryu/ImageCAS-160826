@@ -1,0 +1,21 @@
+dataset_name: ImageCAS
+dataset_id: 501
+official_split: 1
+expected_cases: 1000
+expected_counts:
+  train: 700
+  val: 50
+  test: 250
+case_id:
+  regex: '(?i)(?:case|patient|img|image|label|mask|seg)?[_ -]*(\d+)'
+  width: 4
+geometry:
+  affine_atol: 1.0e-5
+  spacing_atol_mm: 1.0e-5
+mask:
+  expected_values: [0, 1]
+qc:
+  random_seed: 160826
+  random_cases: 20
+  tail_cases: 10
+

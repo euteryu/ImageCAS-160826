@@ -1,0 +1,4 @@
+dataset_root: /kaggle/input/imagecas
+split_workbook: /kaggle/input/imagecas-splits/ImageCAS_dataset_split.xlsx
+artifact_root: /kaggle/working/imagecas_artifacts
+

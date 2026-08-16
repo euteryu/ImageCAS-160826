@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "imagecas-segmentation"
+version = "0.1.0"
+description = "Auditable ImageCAS data preparation and evaluation tooling"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "matplotlib>=3.8,<4",
+  "nibabel>=5.2,<6",
+  "numpy>=1.26,<3",
+  "pandas>=2.2,<3",
+  "PyYAML>=6,<7",
+  "scipy>=1.12,<2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9", "ruff>=0.9,<1"]
+excel = ["openpyxl>=3.1,<4"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100

@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+dist/
+build/
+*.egg-info/
+.docx_review/
+
+# Medical data and generated heavy artifacts
+*.nii
+*.nii.gz
+nnUNet_raw/
+nnUNet_preprocessed/
+nnUNet_results/
+artifacts/qc/montages/
+artifacts/**/*.png
+artifacts/**/*.pdf
+artifacts/**/*.pt
+artifacts/**/*.pth
+
