@@ -17,6 +17,7 @@ Build a reproducible and auditable ImageCAS-to-nnU-Net v2 coronary segmentation 
 - Isolate official Split-1 test labels from nnU-Net fingerprinting/preprocessing in the later builder.
 - Refer to labels as the “ImageCAS binary coronary-artery reference mask” until visual QC establishes stronger semantics.
 - Prefer resumable, case-wise archive processing because Kaggle working storage is 20 GB and each shard is about 17 GB.
+- Do not attempt a conventional full Dataset501 extraction/preprocessing in one Kaggle session. Smoke measurements extrapolate to about 67.5 GB raw plus 112.5 GB preprocessed for 750 development cases, far beyond the 20 GB writable disk. Use persistent shards/symlinks or larger-storage compute.
 - The project owner waived the full 1,000-case audit after cases 1–23 passed. Never describe Gate A or the full dataset audit as passed; describe it as an explicit accepted-risk waiver.
 - Update `LOGBOOK.md` after each meaningful Kaggle result, unexpected issue, strategy change, or completed milestone.
 - Put Kaggle-executed implementation code in numbered scripts under `kaggle/`. Give the user one-line notebook commands instead of multiline Python cells because pasted indentation is unreliable in their workflow.

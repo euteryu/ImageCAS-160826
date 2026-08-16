@@ -207,6 +207,44 @@ Report the command output and displayed three-row table back to Codex.
 
 ## Run notes
 
+### 2026-08-17 — Why the full 700-case baseline was not launched overnight
+
+The project owner reasonably asked why we were still running a smoke workflow rather than immediately training the intended U-Net baseline on all official training data. The distinction was clarified:
+
+- Tonight's smoke workflow **does train a real 3D U-Net** on ImageCAS: 16 training cases, 4 validation cases, one complete epoch, GPU forward/backward passes, checkpoint creation, and validation predictions.
+- It is an engineering pipeline test, not the scientific 700-case baseline.
+
+The complete baseline was not launched because the current Kaggle notebook exposes only **20 GB of writable `/kaggle/working` storage**. The official ImageCAS input is about **83 GB** and is mounted read-only as five multipart archives. nnU-Net cannot train directly from those archive members: it expects a normal raw dataset tree and a preprocessed dataset tree.
+
+Measured smoke storage was:
+
+```text
+20 raw image/label pairs: 1.8 GB
+20 preprocessed 3d_fullres cases: 3.0 GB
+combined before results: 4.8 GB
+Kaggle writable capacity: 20 GB
+```
+
+Simple linear estimates for the 750-case development set are therefore approximately:
+
+```text
+raw 750-case development data: 1.8 / 20 × 750 ≈ 67.5 GB
+preprocessed 750-case data: 3.0 / 20 × 750 ≈ 112.5 GB
+combined raw + preprocessed: ≈ 180 GB
+```
+
+These estimates exclude model checkpoints, validation predictions, logs, temporary extraction files, and filesystem safety margin. Even raw data alone is more than three times the writable capacity; raw plus preprocessing is roughly nine times the capacity. Trusting the dataset owners and waiving the full audit does not remove this physical storage requirement.
+
+Why this affects workflow convenience:
+
+1. We cannot extract all 750 development cases into one ordinary Kaggle notebook.
+2. We cannot run standard full-dataset nnU-Net preprocessing into the same 20 GB working disk.
+3. Session resets erase `/kaggle/working` unless outputs are saved or persistence succeeds, so hours of preparation cannot be treated as disposable state.
+4. The read-only Kaggle input can hold large persistent datasets, but preprocessing cannot write back into it.
+5. Full training therefore needs a staged design: create raw/preprocessed shards as persistent Kaggle dataset outputs, attach them read-only in the training notebook, and present a unified directory through symbolic links—or move the run to compute with substantially more writable storage.
+
+Decision: do not launch a knowingly impossible 700-case job merely to appear to be training sooner. First complete the one-epoch smoke run to prove actual GPU training/checkpoint/validation behavior. Then implement and validate persistent sharded storage before scheduling the official baseline. This is a Kaggle infrastructure constraint, not additional model experimentation.
+
 ### 2026-08-17 — Corrected advice about closing an interactive Kaggle session
 
 Codex initially stated too confidently that an interactively running cell could be left by closing the browser and checked later. Kaggle documentation says interactive sessions may remain active until their idle timeout, and optional file persistence is best-effort; this is not the reliable mechanism for an unattended run. Kaggle staff recommends **Save & Run All** for background execution that may safely continue after the browser closes.
