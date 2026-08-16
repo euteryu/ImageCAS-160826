@@ -205,6 +205,22 @@ Report the command output and displayed three-row table back to Codex.
 
 ## Run notes
 
+### 2026-08-16 — Three-case archive audit smoke test passed
+
+The resumable archive auditor processed cases 1–3 successfully:
+
+```text
+case0001: OK
+case0002: OK
+case0003: OK
+completed_cases: 3
+warning_cases: 0
+```
+
+All three volumes were `512 × 512 × 275`; z-spacing was `0.5 mm`; in-plane spacing varied by case as expected. All masks contained only `[0, 1]`, foreground occupied roughly 0.13–0.16% of voxels, and each mask had two connected components. Empty warning cells appeared as `NaN` when pandas loaded the CSV using its default missing-value behavior; this meant no warning, not missing audit execution.
+
+Decision: the case-wise extraction, NIfTI loading, geometry audit, hashing, CSV append, and temporary cleanup path passes its smoke test. Next validate official Split-1, then time a further 20 cases before the full audit.
+
 ### 2026-08-16 — Audit CSV read attempted before audit execution
 
 After pulling the logbook commit in Kaggle, `pd.read_csv("artifacts/data_audit.csv")` raised `FileNotFoundError`. This was expected because `git pull` retrieves source-controlled files only; the generated audit CSV is deliberately not committed and `scripts/02_audit_archives.py --limit 3` had not yet been run.

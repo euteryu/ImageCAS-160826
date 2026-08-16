@@ -18,3 +18,18 @@ def test_reconciliation_is_explicit():
     assert report.loc["case0001", "problem"] == "missing_from_split"
     assert report.loc["case0003", "problem"] == "missing_from_dataset"
 
+
+def test_read_imagecas_v2_workbook(tmp_path):
+    path = tmp_path / "imageCAS_data_split.xlsx"
+    rows = pd.DataFrame([
+        [None, "4-fold cross validation", None, None, None],
+        ["FileName", "Split-1", "Split-2", "Split-3", "Split-4"],
+        [1, "Training", "Training", "Validation", "Testing"],
+        [2, "Validation", "Testing", "Training", "Training"],
+        [3, "Testing", "Validation", "Testing", "Training"],
+    ])
+    with pd.ExcelWriter(path) as writer:
+        rows.to_excel(writer, sheet_name="v2-latest", header=False, index=False)
+    split = read_split_table(path, split=1)
+    assert split.case_id.tolist() == ["case0001", "case0002", "case0003"]
+    assert split.partition.tolist() == ["train", "val", "test"]

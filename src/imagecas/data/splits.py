@@ -27,12 +27,32 @@ def normalize_id(value: object, width: int = 4) -> str:
     return f"case{int(matches[-1]):0{width}d}"
 
 
+def _read_imagecas_workbook(path: Path, split: int) -> pd.DataFrame:
+    raw = pd.read_excel(path, sheet_name="v2-latest", header=None)
+    header_rows = raw.index[raw.iloc[:, 0].astype(str).str.strip().str.lower() == "filename"]
+    if len(header_rows) != 1:
+        raise ValueError("Could not locate the FileName header in v2-latest")
+    header_row = int(header_rows[0])
+    headings = [str(value).strip() for value in raw.iloc[header_row]]
+    frame = raw.iloc[header_row + 1 :].copy()
+    frame.columns = headings
+    case_column = "FileName"
+    partition_column = f"Split-{split}"
+    if partition_column not in frame.columns:
+        raise ValueError(f"Workbook does not contain {partition_column}")
+    result = frame[[case_column, partition_column]].dropna().copy()
+    result.columns = ["case_id", "partition"]
+    return result
+
+
 def read_split_table(path: Path, split: int = 1, case_width: int = 4) -> pd.DataFrame:
     """Read a CSV/XLSX in either long form or three-column train/val/test form."""
     if path.suffix.lower() == ".csv":
         frame = pd.read_csv(path)
+    elif path.suffix.lower() in {".xlsx", ".xls"}:
+        frame = _read_imagecas_workbook(path, split)
     else:
-        frame = pd.read_excel(path, sheet_name=split - 1)
+        raise ValueError(f"Unsupported split format: {path.suffix}")
     lower = {str(c).strip().lower(): c for c in frame.columns}
     if {"case_id", "partition"}.issubset(lower):
         result = frame[[lower["case_id"], lower["partition"]]].copy()
@@ -69,4 +89,3 @@ def reconcile_split(manifest: pd.DataFrame, split: pd.DataFrame) -> pd.DataFrame
             "problem": "" if in_dataset and in_split else ("missing_from_split" if in_dataset else "missing_from_dataset"),
         })
     return pd.DataFrame(rows)
-
