@@ -20,6 +20,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8,<9", "ruff>=0.9,<1"]
 excel = ["openpyxl>=3.1,<4"]
+nnunet = ["nnunetv2==2.8.1"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

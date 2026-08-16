@@ -67,6 +67,18 @@ python scripts/06_generate_qc_report.py artifacts/data_manifest.csv case0001 cas
 
 Generated CSV and JSON outputs go under `artifacts/`. Large or sensitive data products are ignored by Git.
 
+## Build the engineering smoke dataset
+
+`Dataset599_ImageCAS_SMOKE` uses 20 official Split-1 training cases solely to verify the pipeline. It must never appear in scientific results.
+
+```bash
+python scripts/00_inspect_imagecas_inputs.py
+python scripts/03_build_smoke_dataset.py \
+  /kaggle/input/datasets/xiaoweixumedicalai/imagecas/imageCAS_data_split.xlsx
+```
+
+This creates 16 smoke-training cases, 4 smoke-validation cases, `dataset.json`, a hash manifest, and a custom split file. It preserves the original NIfTI geometry.
+
 ## Gate A
 
 Do not train until all expected cases are accounted for, pairing and physical geometry are proven, mask values are known, the official split is reproduced, QC overlays are reviewed, and audit outliers are investigated.

@@ -7,7 +7,7 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 - Phase: IMG-CAS-001 — dataset discovery and audit
 - Training status: **not started**
 - GPU required now: **no**
-- Current checkpoint: audit waiver accepted; determine a storage-feasible nnU-Net data pipeline on Kaggle
+- Current checkpoint: build `Dataset599_ImageCAS_SMOKE` from 20 official Split-1 training cases
 - Repository: <https://github.com/euteryu/ImageCAS-160826>
 - Kaggle dataset: <https://www.kaggle.com/datasets/xiaoweixumedicalai/imagecas>
 
@@ -205,6 +205,17 @@ Report the command output and displayed three-row table back to Codex.
 - Pass Gate A before enabling model training.
 
 ## Run notes
+
+### 2026-08-16 — Smoke dataset builder implemented
+
+A storage-bounded builder was added for `Dataset599_ImageCAS_SMOKE`. It selects the first 20 IDs assigned to training in official Split-1, extracts only those cases, preserves their original NIfTI geometry, renames them into nnU-Net v2 format, and produces:
+
+- 20 raw image/label pairs;
+- `dataset.json` for one CT channel and binary coronary labels;
+- deterministic source and SHA-256 manifest;
+- one engineering-only split with 16 training and 4 validation cases.
+
+The smoke dataset is explicitly non-scientific. Its purpose is to test installation, dataset integrity verification, planning, preprocessing, GPU training, checkpoint creation, inference, and evaluation without requiring the full dataset to fit in Kaggle's 20 GB writable disk.
 
 ### 2026-08-16 — Full 1,000-case audit explicitly waived
 

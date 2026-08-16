@@ -3,9 +3,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import re
-import shutil
-import subprocess
 import tempfile
 from pathlib import Path
 
@@ -13,63 +10,8 @@ import pandas as pd
 import yaml
 
 from imagecas.data.audit import audit_case
+from imagecas.data.archives import archive_entries, extract_case
 from imagecas.data.discover import sha256_file
-
-
-ENTRY_PATTERN = re.compile(r"(?:^|/)(\d+)\.(img|label)\.nii\.gz$", re.IGNORECASE)
-
-
-def seven_zip() -> str:
-    executable = shutil.which("7z") or shutil.which("7zz")
-    if not executable:
-        raise RuntimeError("7z/7zz is unavailable")
-    return executable
-
-
-def archive_entries(archive: Path) -> dict[int, dict[str, str]]:
-    process = subprocess.run(
-        [seven_zip(), "l", "-slt", str(archive)],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    cases: dict[int, dict[str, str]] = {}
-    for line in process.stdout.splitlines():
-        if not line.startswith("Path = "):
-            continue
-        entry = line[7:]
-        match = ENTRY_PATTERN.search(entry)
-        if match:
-            case_number, role = int(match.group(1)), match.group(2).lower()
-            cases.setdefault(case_number, {})[role] = entry
-    incomplete = {case: roles for case, roles in cases.items() if set(roles) != {"img", "label"}}
-    if incomplete:
-        raise RuntimeError(f"Incomplete archive pairs: {incomplete}")
-    return cases
-
-
-def extract_case(archive: Path, entries: dict[str, str], output_dir: Path) -> tuple[Path, Path]:
-    process = subprocess.run(
-        [
-            seven_zip(),
-            "x",
-            "-y",
-            f"-o{output_dir}",
-            str(archive),
-            entries["img"],
-            entries["label"],
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if process.returncode != 0:
-        raise RuntimeError(f"Extraction failed:\n{process.stdout}\n{process.stderr}")
-    image_matches = list(output_dir.rglob(Path(entries["img"]).name))
-    mask_matches = list(output_dir.rglob(Path(entries["label"]).name))
-    if len(image_matches) != 1 or len(mask_matches) != 1:
-        raise RuntimeError(f"Unexpected extraction result for {entries}")
-    return image_matches[0], mask_matches[0]
 
 
 def completed_cases(output_csv: Path) -> set[str]:
