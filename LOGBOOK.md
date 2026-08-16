@@ -205,6 +205,23 @@ Report the command output and displayed three-row table back to Codex.
 
 ## Run notes
 
+### 2026-08-16 — Official Split-1 validation passed
+
+The `v2-latest` workbook parser validated official Split-1 independently of the partial audit CSV:
+
+```text
+case_count: 1000
+train: 700
+validation: 50
+test: 250
+first ID: case0001
+last ID: case1000
+status: PASS
+manifest SHA-256: 2dfc35bafe67101f04c538c84abc20c34d33412d38ed7bda55d3018eba62cc15
+```
+
+There were no missing, duplicate, unexpected, or invalid partition records. Decision: Split-1 integrity is established at workbook level. The next checkpoint is a timed 20-case continuation of the resumable CPU archive audit.
+
 ### 2026-08-16 — Three-case archive audit smoke test passed
 
 The resumable archive auditor processed cases 1–3 successfully:
