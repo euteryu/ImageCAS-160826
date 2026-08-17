@@ -167,21 +167,16 @@ The resumable implementation is `scripts/02_audit_archives.py`.
 
 ## Current next action
 
-Push the educational-subset implementation to GitHub, then run the CPU-only raw
-builder in a clean Kaggle session:
-
-```python
-!bash /kaggle/working/ImageCAS-160826/kaggle/04_build_edu100_raw.sh
-```
-
-Confirm its PASS report, exact disk usage, 80 extracted development cases, and
-zero extracted test cases. Do not start preprocessing in the same session.
+Push the committed strict Phase 2 implementation to GitHub. Create a fresh
+private CPU notebook, attach the successful output of
+`ImageCAS-180626-v2-EDU100-1.1` under Notebook Output Files, clone the repository,
+and submit `kaggle/05_preprocess_edu100.sh` using Save & Run All. Its final report
+must show 64 fingerprint cases, 80 preprocessed cases, and zero test cases.
 
 ## Known open work
 
-- Define deterministic 64/16/20 case selection from the official Split-1 partitions.
-- Implement and validate the storage lifecycle for the 80-case development subset without retaining raw and preprocessed copies together unnecessarily.
-- Persist and reattach the preprocessed development subset read-only if it fits safely as one Kaggle dataset; use multiple shards only if measurements prove necessary.
+- Attach and validate the Phase 1 raw notebook output in a fresh CPU notebook.
+- Preprocess Dataset598, record its measured size, and persist the output read-only for training; use multiple shards only if measurements prove necessary.
 - Enforce an explicit rule preventing all official test cases, including the selected 20-case test subset, from entering fingerprinting, planning, or training preprocessing.
 - Train staged 16-, 32-, and 64-case learning runs and evaluate them against the same held-out 20-case test subset.
 - Select random and statistical-outlier cases for visual QC.
@@ -190,6 +185,268 @@ zero extracted test cases. Do not start preprocessing in the same session.
 - Treat Gate A as an accepted-risk waiver, never as passed; reinstate the resumable audit if later failures suggest bad input data.
 
 ## Run notes
+
+### 2026-08-17 — Strict training-only Phase 2 design implemented
+
+The preprocessing decision is resolved in favour of the methodologically strict
+fixed split. Dataset598 fingerprinting, target-spacing selection, and CT
+normalization statistics will use only the 64 training cases. The resulting plan
+is then frozen and applied unchanged while preprocessing all 80 development
+cases. The 16 validation cases do not influence fitted preprocessing statistics,
+and all test cases remain absent.
+
+Phase 2 creates a writable raw-dataset view containing file symlinks rather than
+copying the 6.9 GB attachment. Its unattended sequence is:
+
+1. Expose and integrity-check all 80 development cases.
+2. Rebuild the view with only 64 training cases.
+3. Extract the fingerprint with integrity verification and create the plan.
+4. Rebuild the view with 64 training plus 16 validation cases.
+5. Preprocess all 80 using the already-frozen training-only plan.
+6. Emit a report that fails unless fingerprint count is 64, preprocessed count
+   is 80, and both views contain zero test cases.
+
+The split nnU-Net commands are an intentional use of its supported separate
+fingerprint, planning, and preprocessing entry points. Local verification after
+implementation: **16 synthetic tests passed**; Python compilation, shell syntax,
+and Git whitespace checks passed.
+
+### 2026-08-17 — EDU100 Phase 1 raw construction passed
+
+The unattended CPU run of `ImageCAS-180626-v2-EDU100-1.1` completed raw
+construction for `Dataset598_ImageCAS_EDU100`.
+
+Observed report:
+
+```text
+status: PASS
+development cases extracted: 80
+training pool: 64
+validation: 16
+held-out test IDs recorded: 20
+held-out test cases extracted: 0
+test isolation: PASS
+raw dataset size: 6.9 GB
+/kaggle/working used: 6.9 GB of 20 GB (36%)
+/kaggle/working available: 13 GB
+```
+
+The measured raw size is 0.3 GB below the provisional 7.2 GB estimate. Counts
+match the fixed educational design, and the Phase 1 builder did not extract any
+official test image or label. This validates the raw construction and storage
+estimate without using a GPU.
+
+Decision: accept EDU100 Phase 1. Persist its successful notebook output and use
+it as the read-only input for Phase 2. Do not preprocess yet: first resolve the
+documented fixed-validation issue and, if training-only fingerprinting is
+selected, update and test the Phase 2 implementation before providing its
+one-line command.
+
+### 2026-08-17 — nnU-Net preprocessing terminology documented
+
+Added `docs/IMAGECAS_NNUNET_PREPROCESSING.md` so the project does not rely on
+unexplained terms such as target spacing, CT normalization, and label-preserving
+resampling. The note explains that the smoke spacing was the 20-case median of
+physical voxel spacings, gives the recorded clipping and z-score statistics,
+explains why categorical masks must remain in `{0, 1}`, and distinguishes the
+smoke plan from the plan Dataset598 will calculate from its own cases.
+
+The note also records a decision point before Dataset598 preprocessing: the
+current standard nnU-Net design fingerprints all 80 development cases, so the
+16 validation cases—20% of that pool—contribute geometry and foreground-label
+intensities to dataset-level planning statistics. They do not update model
+weights, and all official test cases remain excluded. A stricter fixed-split
+experiment would fit preprocessing statistics on the 64 training cases only and
+apply them unchanged to validation and test data; choose explicitly before
+running Phase 2.
+
+### 2026-08-17 — Reusable Kaggle ML playbook created
+
+The general lessons from ImageCAS were separated from the project-specific
+handover and written to `docs/KAGGLE_ML_PLAYBOOK.md`. The playbook covers goal
+selection, inspection, vertical-slice smoke testing, storage measurement,
+persistence boundaries, saved-output chaining, thin notebooks, unattended jobs,
+hardware verification, leakage prevention, provenance, resumability, and
+pre-/post-run checklists. It is intended to be portable to future segmentation
+and other machine-learning projects. The repository README links to it.
+
+### 2026-08-17 — Retrospective: why reaching EDU100 staging took so long
+
+The project owner asked for a candid explanation of why the current staged
+Kaggle workflow was not obvious from the beginning and whether the preceding
+day's work had been wasted. The answer is a mixture of necessary discovery and
+avoidable workflow friction.
+
+#### The objective changed materially
+
+The inherited objective was to audit all 1,000 cases and prepare an official
+700-case training baseline. The owner later clarified that the actual priority
+is learning the complete CCTA modelling workflow with the smallest dataset that
+can still demonstrate meaningful training and evaluation. This distinction
+matters:
+
+- a 700/50 development set genuinely requires persistent multi-part staging or
+  compute with much more writable storage;
+- a 64/16 development set can use a substantially simpler three-notebook
+  pipeline;
+- the 100-case educational objective did not become explicit until after the
+  full-scale storage problem had been investigated.
+
+The project should have surfaced this research-scale-versus-learning-scale
+choice earlier instead of continuing to optimize around the inherited full
+baseline.
+
+#### Discovery that was genuinely necessary
+
+Several facts could not safely be assumed and were established through Kaggle
+runs:
+
+1. The official input did not expose ordinary NIfTI files. It contained 83 GB
+   of multipart archives with unusual `.change2zip` and `.zNN` names.
+2. The archive groups had to be opened without copying them and verified to
+   contain 1,000 apparent image/mask pairs.
+3. The workbook contained multiple versions. `v2-latest`, not `v1`, was shown
+   to match archive IDs 1–1000 and encode the authoritative 700/50/250 Split-1.
+4. Kaggle provided only 20 GB of writable `/kaggle/working` storage. Raw and
+   preprocessed sizes were unknown until measured.
+5. The 20-case smoke run measured 1.8 GB raw and 3.0 GB preprocessed, proving
+   that nnU-Net preprocessing materially expands storage and that foreground
+   cropping does not reduce these volumes.
+6. The installed PyTorch build could detect the P100 but could not execute CUDA
+   kernels because its wheel omitted the P100's `sm_60` architecture.
+7. Switching to a T4 and strengthening the checker to execute a real CUDA
+   operation was necessary; `torch.cuda.is_available()` alone was insufficient.
+8. A complete one-epoch run proved preprocessing consumption, GPU
+   forward/backward execution, checkpoint creation, inference, and validation
+   metric generation before scaling the data workflow.
+
+These findings were valuable. Without them, a larger unattended run could have
+failed after hours because of archive handling, disk exhaustion, unsupported
+GPU architecture, or an unproven nnU-Net execution path.
+
+#### Workflow friction that was avoidable
+
+The process nevertheless took longer and felt more meandering than necessary:
+
+- Kaggle was initially treated too much like a conventional persistent
+  workstation.
+- Live `/kaggle/working` state was not distinguished clearly enough from saved,
+  attachable notebook-version output.
+- Advice about closing an interactively running browser session was initially
+  too confident and later corrected to the reliable Save & Run All workflow.
+- Exploration remained in an accumulated notebook for too long instead of
+  moving promptly to short, version-controlled stage scripts.
+- Long pasted commands were unsuitable for the owner's workflow and caused
+  paste/indentation failures before the one-line-script policy was adopted.
+- Once the 20-case storage measurements existed, the 20 GB arithmetic and
+  notebook-output chaining should have been presented more directly.
+- The full 700-case inherited objective was allowed to dominate design longer
+  than it should have before explicitly asking whether the desired outcome was
+  scientific benchmarking or practical learning.
+
+The previous day's work was therefore not pointless: it produced a proven
+end-to-end 3D segmentation execution path and exposed the important archive,
+storage, persistence, and GPU constraints. However, the owner's sense that the
+route was less direct than it should have been is justified.
+
+#### Efficient sequence with current knowledge
+
+If starting again with today's knowledge, the clean route would be:
+
+1. Inspect the multipart archives and validate the official split.
+2. Build a 20-case smoke dataset.
+3. Measure raw and preprocessed storage.
+4. Run one T4 epoch plus inference and validation.
+5. Explicitly choose between a research-scale benchmark and an educational
+   baseline.
+6. Select the fixed 100-case educational design.
+7. Execute three unattended stages: CPU raw construction, CPU preprocessing,
+   then one-T4 training/inference/evaluation.
+
+The central lesson is to resolve the intended scale and learning objective as
+soon as minimum feasibility evidence exists. From this point onward, user
+interaction should normally be limited to submitting one background job,
+returning later, attaching its saved output, and submitting the next job.
+
+### 2026-08-17 — EDU100 Phase 1 Kaggle notebook created
+
+The project owner named the Phase 1 raw-staging notebook:
+
+```text
+ImageCAS-180626-v2-EDU100-1.1
+```
+
+This is the notebook whose successfully committed output will contain
+`nnUNet_raw/Dataset598_ImageCAS_EDU100`. After it reports PASS and its saved
+output is available, select this notebook under **Add Input → Notebook Output
+Files → Your Work** in the Phase 2 preprocessing notebook. A separate Kaggle
+Dataset is not required unless direct notebook-output attachment fails.
+
+### 2026-08-17 — Kaggle execution policy: unattended stage jobs
+
+The project owner does not want to keep a Kaggle notebook open or execute a
+long workflow cell by cell. Future substantial Kaggle work must therefore be
+packaged as version-controlled, one-command stage scripts intended for
+**Save & Run All**. The browser may be closed after the background run has been
+submitted, and the result can be reviewed later.
+
+Yesterday's smoke work was not disposable. It established that nnU-Net installs
+correctly, the T4 executes CUDA kernels, preprocessing is consumable, real 3D
+forward/backward training completes, checkpoints are written, inference runs,
+and validation metrics are produced. It removed the risk of preparing a larger
+dataset before proving the execution stack.
+
+Resource policy by stage:
+
+```text
+raw extraction         CPU
+planning/preprocessing CPU
+model training         one T4 GPU
+inference              one T4 GPU
+metric evaluation      CPU (may run at the end of the GPU job)
+```
+
+The smoke command set `CUDA_VISIBLE_DEVICES=0`, so it deliberately used one T4.
+nnU-Net does not automatically turn a second exposed T4 into an efficient
+multi-GPU run; one T4 is the simpler and more reproducible choice for this
+small-data educational experiment.
+
+Decision: use the fewest safe unattended jobs, not interactive checkpointing
+after every command. The planned minimum is three submitted notebook runs:
+
+1. CPU raw construction; save its output.
+2. CPU planning/preprocessing from the attached raw output; save its output.
+3. One-T4 training, inference, and evaluation from the attached preprocessed
+   output.
+
+These cannot safely be collapsed into one Kaggle run. Smoke measurements give
+the following provisional 80-development-case estimate:
+
+```text
+raw dataset:                       approximately 7.2 GB
+3d_fullres preprocessed dataset:   approximately 12.0 GB
+combined:                          approximately 19.2 GB
+Kaggle writable /kaggle/working:   20.0 GB
+nominal space left:                approximately 0.8 GB
+```
+
+The apparent 0.8 GB remainder is not a usable safety margin. It must also
+accommodate per-case extraction directories, preprocessing temporary files,
+Python and nnU-Net runtime output, filesystem overhead, plans and fingerprints,
+checkpoints, validation predictions, and logs. Disk exhaustion could therefore
+occur before preprocessing or training completes. This estimate also comes from
+linear extrapolation of the 20-case smoke run and is not a guarantee that every
+selected volume has the same size.
+
+Consequently, raw construction must finish and its output must become a
+read-only Kaggle input before preprocessing begins in a clean 20 GB workspace.
+The preprocessed output should likewise be persisted before training so a
+training failure or timeout does not require preprocessing again. The
+accelerator boundary is also useful: preparation should not consume GPU quota.
+User involvement should be limited to creating the next notebook, attaching the
+preceding saved output, submitting Save & Run All, and later returning the final
+report. Stop between stages only for material checks: actual disk size, test
+isolation, preprocessing completion, and attached-output path.
 
 ### 2026-08-17 — Educational-subset staging workflow implemented locally
 

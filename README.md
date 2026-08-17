@@ -3,6 +3,11 @@
 Reproducible, auditable preparation of ImageCAS for an nnU-Net v2 coronary-artery baseline.
 The first milestone is dataset integrity and visual QC. No model training should start until that gate passes.
 
+For reusable guidance on storage-bounded, unattended Kaggle projects, see the
+[Kaggle Machine-Learning Playbook](docs/KAGGLE_ML_PLAYBOOK.md).
+For the concrete meaning of ImageCAS spacing, CT normalization, and categorical
+mask resampling, see [ImageCAS nnU-Net Preprocessing Explained](docs/IMAGECAS_NNUNET_PREPROCESSING.md).
+
 ## Current scope: IMG-CAS-001
 
 The repository currently provides:

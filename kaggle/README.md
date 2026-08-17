@@ -24,6 +24,11 @@ and run:
 !bash /kaggle/working/ImageCAS-160826/kaggle/05_preprocess_edu100.sh
 ```
 
+Phase 2 first verifies all 80 development cases. It then fingerprints and plans
+using only the 64 training cases, freezes that plan, and preprocesses the 64
+training plus 16 validation cases. Both views contain zero test cases. The final
+report must show 64 fingerprint cases and 80 preprocessed cases.
+
 Do not run raw construction and preprocessing in the same session: their
 estimated combined size is too close to the 20 GB writable-disk limit.
 
