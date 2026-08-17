@@ -186,6 +186,20 @@ must show 64 fingerprint cases, 80 preprocessed cases, and zero test cases.
 
 ## Run notes
 
+### 2026-08-17 — Phase 1 notebook output attachment verified
+
+In the new Phase 2 CPU notebook, Kaggle mounted the successful Phase 1 output at:
+
+```text
+/kaggle/input/notebooks/minseokryu5432/imagecas-180626-v2-edu100-1-1/nnUNet_raw/Dataset598_ImageCAS_EDU100/dataset.json
+```
+
+Exactly one Dataset598 `dataset.json` was found, confirming that
+`ImageCAS-180626-v2-EDU100-1.1` was attached correctly as a read-only notebook
+output. Phase 2 is cleared for unattended **Save & Run All** with accelerator
+None and Internet On, using `kaggle/05_preprocess_edu100.sh`. Await its final
+preprocessing report and disk-usage output before beginning GPU training.
+
 ### 2026-08-17 — Strict training-only Phase 2 design implemented
 
 The preprocessing decision is resolved in favour of the methodologically strict
