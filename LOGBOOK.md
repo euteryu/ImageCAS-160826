@@ -186,6 +186,27 @@ must show 64 fingerprint cases, 80 preprocessed cases, and zero test cases.
 
 ## Run notes
 
+### 2026-08-17 — EDU100 Phase 2 preprocessing completed; reporter format bug found
+
+The strict Phase 2 CPU notebook successfully fitted the fingerprint and plans
+from 64 training cases, restored the 80-case development view, and completed
+`3d_fullres` preprocessing for all 80 cases in 47 minutes 22 seconds. The
+training and development view reports both contained zero test cases. The
+training-derived plan used target spacing `0.5 × 0.34765625 × 0.34765625` mm,
+patch size `96 × 160 × 160`, and batch size 2.
+
+The final custom report nevertheless printed `development_preprocessed_case_count:
+0` and `status: FAIL`. This was a reporting defect, not an nnU-Net preprocessing
+failure: the reporter counted only packed `.npz` payloads, while the installed
+nnU-Net workflow exposed unpacked per-case `.npy` payloads after preprocessing.
+The reporter now recognizes both packed and unpacked forms, ignores companion
+`_seg.npy` arrays, and deduplicates a case if both representations exist.
+
+Decision: do not repeat the 47-minute preprocessing step if the Kaggle working
+session still contains the completed output. Pull this fix and rerun only the
+reporter; accept Phase 2 only when the corrected report shows 80 preprocessed
+cases and `status: PASS`, then persist that notebook output for Phase 3.
+
 ### 2026-08-17 — Phase 1 notebook output attachment verified
 
 In the new Phase 2 CPU notebook, Kaggle mounted the successful Phase 1 output at:

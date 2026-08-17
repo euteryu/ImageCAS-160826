@@ -3,9 +3,21 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 
 
 DATASET_NAME = "Dataset598_ImageCAS_EDU100"
+CASE_PAYLOAD_RE = re.compile(r"^(case\d{4})(?:\.npz|\.npy)$")
+
+
+def preprocessed_case_ids(data_folder: Path) -> set[str]:
+    """Find cases in either packed (.npz) or unpacked (.npy) nnU-Net form."""
+    case_ids: set[str] = set()
+    for path in data_folder.iterdir():
+        match = CASE_PAYLOAD_RE.fullmatch(path.name)
+        if match is not None:
+            case_ids.add(match.group(1))
+    return case_ids
 
 
 def main() -> None:
@@ -20,7 +32,8 @@ def main() -> None:
     )
     configuration = plans["configurations"]["3d_fullres"]
     data_folder = dataset / configuration["data_identifier"]
-    preprocessed_cases = len(list(data_folder.glob("*.npz")))
+    preprocessed_ids = preprocessed_case_ids(data_folder)
+    preprocessed_cases = len(preprocessed_ids)
     fingerprint_cases = len(fingerprint["spacings"])
     checks = {
         "training_view_cases": training_view["case_count"] == 64,
