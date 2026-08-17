@@ -5,9 +5,9 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 ## Current status
 
 - Phase: IMG-CAS-001 — dataset discovery and audit
-- Training status: **not started**
+- Training status: **one-epoch 20-case engineering smoke test passed; official baseline not started**
 - GPU required now: **no**
-- Current checkpoint: build `Dataset599_ImageCAS_SMOKE` from 20 official Split-1 training cases
+- Current checkpoint: design a storage-bounded 100-case educational baseline (64 train, 16 validation, 20 held-out test)
 - Repository: <https://github.com/euteryu/ImageCAS-160826>
 - Kaggle dataset: <https://www.kaggle.com/datasets/xiaoweixumedicalai/imagecas>
 
@@ -167,45 +167,150 @@ The resumable implementation is `scripts/02_audit_archives.py`.
 
 ## Current next action
 
-In the existing Kaggle notebook, with the GPU still disabled:
+Push the educational-subset implementation to GitHub, then run the CPU-only raw
+builder in a clean Kaggle session:
 
 ```python
-%cd /kaggle/working/ImageCAS-160826
-!git pull
-!python scripts/02_audit_archives.py --limit 3
+!bash /kaggle/working/ImageCAS-160826/kaggle/04_build_edu100_raw.sh
 ```
 
-Then inspect:
-
-```python
-import pandas as pd
-
-audit = pd.read_csv("artifacts/data_audit.csv")
-display(audit[[
-    "case_id",
-    "image_shape_x", "image_shape_y", "image_shape_z",
-    "spacing_x_mm", "spacing_y_mm", "spacing_z_mm",
-    "mask_unique_values",
-    "foreground_fraction",
-    "connected_component_count",
-    "warning_codes",
-]])
-```
-
-Report the command output and displayed three-row table back to Codex.
+Confirm its PASS report, exact disk usage, 80 extracted development cases, and
+zero extracted test cases. Do not start preprocessing in the same session.
 
 ## Known open work
 
-- Validate the three-case smoke run.
-- Fix any real archive, memory, geometry, or CSV issue found by that run.
-- Parse `v2-latest` deterministically and verify Split-1 counts: 700 training, 50 validation, 250 testing.
-- Run the resumable audit across all 1,000 cases on CPU.
+- Define deterministic 64/16/20 case selection from the official Split-1 partitions.
+- Implement and validate the storage lifecycle for the 80-case development subset without retaining raw and preprocessed copies together unnecessarily.
+- Persist and reattach the preprocessed development subset read-only if it fits safely as one Kaggle dataset; use multiple shards only if measurements prove necessary.
+- Enforce an explicit rule preventing all official test cases, including the selected 20-case test subset, from entering fingerprinting, planning, or training preprocessing.
+- Train staged 16-, 32-, and 64-case learning runs and evaluate them against the same held-out 20-case test subset.
 - Select random and statistical-outlier cases for visual QC.
 - Re-extract only selected cases to generate montages.
 - Review annotation semantics and outliers manually.
-- Pass Gate A before enabling model training.
+- Treat Gate A as an accepted-risk waiver, never as passed; reinstate the resumable audit if later failures suggest bad input data.
 
 ## Run notes
+
+### 2026-08-17 — Educational-subset staging workflow implemented locally
+
+Implemented deterministic selection and raw construction for
+`Dataset598_ImageCAS_EDU100`. Selection takes the lowest normalized case IDs
+within each authoritative Split-1 partition: 64 training, 16 validation, and 20
+testing. The resulting learning-curve splits are nested at 16, 32, and 64
+training cases and reuse the same 16 validation cases.
+
+The raw builder extracts only the 80 development cases into `imagesTr` and
+`labelsTr`. It records the 20 held-out test IDs in the subset manifest but has no
+test extraction path. Manifests, source checksums, split definitions, and the
+test-isolation report are stored inside the raw dataset's `metadata` directory
+so they survive Kaggle persistence and reattachment.
+
+Two one-line Kaggle entry points were added:
+
+```text
+kaggle/04_build_edu100_raw.sh   CPU raw construction and disk report
+kaggle/05_preprocess_edu100.sh  CPU planning/preprocessing from read-only raw attachment
+```
+
+The two stages intentionally run in separate Kaggle sessions. First persist the
+estimated 7.2 GB raw dataset. Then attach it read-only in a clean session and
+write the provisionally estimated 12 GB preprocessed dataset to
+`/kaggle/working`. This avoids holding both forms on the 20 GB writable disk.
+The preprocessing script searches for exactly one attached Dataset598 raw
+dataset, verifies integrity, fingerprints only the 80 development cases, and
+preprocesses only `3d_fullres`.
+
+Local verification: **13 synthetic tests passed**. Python compilation and Git
+diff whitespace checks passed. Ruff was unavailable locally. No patient data or
+patient-derived artifacts were created locally.
+
+Decision: validate raw construction and measured size on Kaggle before
+preprocessing or implementing the training schedule.
+
+### 2026-08-17 — Scope reduced to a 100-case educational baseline
+
+The project owner decided not to pursue training over all 1,000 ImageCAS cases
+while learning the CCTA segmentation workflow. The priority is now the smallest
+experiment that still demonstrates meaningful model learning, validation, and
+held-out evaluation within Kaggle's practical storage and runtime limits.
+
+Working design:
+
+```text
+64 cases from official Split-1 training: model fitting
+16 cases from official Split-1 validation: model selection and monitoring
+20 cases from official Split-1 testing: final held-out evaluation only
+100 cases total
+```
+
+Case selection must be deterministic and recorded in a manifest. Official
+partition membership remains authoritative: no case may move between training,
+validation, and testing. The 20 selected test labels must remain isolated from
+fingerprinting, planning, training preprocessing, training, and model selection;
+they are opened only for final metric calculation after predictions exist.
+
+The intended experiment is a learning curve using nested training subsets of
+16, 32, and 64 cases, the same 16-case validation set, and the same untouched
+20-case test set. This will show whether additional training cases improve
+overlap, surface, and topology measures. Results must be described as an
+educational small-data baseline, not as the official ImageCAS benchmark or a
+full-dataset result.
+
+Clarification: sharding is a storage mechanism, not a plan to train independent
+models on separate chunks and combine them. nnU-Net samples small 3D patches
+from cases on disk and updates one model continuously. Based on the smoke
+measurements, 80 development cases are provisionally estimated at about 7.2 GB
+raw and 12 GB preprocessed. The workflow should avoid holding both forms in
+`/kaggle/working` simultaneously. Multi-shard staging is deferred unless direct
+measurement shows that one persistent preprocessed 80-case dataset cannot fit
+safely.
+
+Decision: replace the 750-case persistent-sharding milestone with the fixed
+100-case educational experiment. Before implementation, specify the exact case
+selection rule, storage lifecycle, training schedule, acceptance checks, and
+files to change.
+
+### 2026-08-17 — One-epoch 3d_fullres smoke training passed
+
+The clean Kaggle smoke workflow completed actual GPU training, checkpointing,
+validation inference, and metric aggregation for `Dataset599_ImageCAS_SMOKE`.
+The installed split contained 16 training and 4 validation cases. The built-in
+`nnUNetTrainer_1epoch` trainer used the `3d_fullres` configuration with a
+`96 × 160 × 160` patch, batch size 2, and `torch.compile` enabled.
+
+Observed result:
+
+```text
+epoch time: 299.21 s
+train loss: -0.1679
+validation loss: -0.3713
+epoch pseudo Dice: 0.4495
+validation predictions: case0017–case0020 (4/4)
+final mean validation Dice: 0.33587939502312114
+final mean validation IoU: 0.2027645833892343
+checkpoint_final: 235 MB
+checkpoint_best: 235 MB
+results directory: 471 MB
+/kaggle/working usage after completion: 5.2 GB of 20 GB
+status: PASS
+```
+
+The PyTorch Inductor messages about insufficient SMs for
+`max_autotune_gemm` and dynamically disabling online softmax were warnings,
+not failures. Training and all four validation predictions completed.
+
+Interpretation: the end-to-end nnU-Net v2 execution path is proven on Kaggle,
+including preprocessing consumption, GPU forward/backward execution,
+checkpoint creation, inference, and evaluation. The Dice value is not a
+scientific baseline result: it comes from one epoch on a deliberately small,
+engineering-only 16/4 split and must not be used to characterize ImageCAS model
+performance.
+
+Decision: close the smoke-training checkpoint. Keep the official 700-case
+training baseline unstarted. The next engineering milestone is persistent,
+manifested raw/preprocessed sharding that fits Kaggle's storage model and keeps
+all 250 official Split-1 test cases out of nnU-Net fingerprinting and
+preprocessing.
 
 ### 2026-08-17 — Why the full 700-case baseline was not launched overnight
 

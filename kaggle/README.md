@@ -9,8 +9,23 @@ Do not paste multiline Python implementations into Kaggle cells. Pull the reposi
 ## Current next command
 
 ```python
-!bash /kaggle/working/ImageCAS-160826/kaggle/03_train_smoke.sh
+!bash /kaggle/working/ImageCAS-160826/kaggle/04_build_edu100_raw.sh
 ```
+
+This CPU-only command builds `Dataset598_ImageCAS_EDU100` with 64 training and
+16 validation cases. It records 20 official test IDs in the selection manifest
+but does not extract their images or labels.
+
+After the raw dataset has been saved as a persistent Kaggle dataset, start a
+fresh CPU session, attach that dataset read-only, clone/pull this repository,
+and run:
+
+```python
+!bash /kaggle/working/ImageCAS-160826/kaggle/05_preprocess_edu100.sh
+```
+
+Do not run raw construction and preprocessing in the same session: their
+estimated combined size is too close to the 20 GB writable-disk limit.
 
 ## Standard update command
 
