@@ -7,7 +7,7 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 - Phase: IMG-CAS-001 — dataset discovery and audit
 - Training status: **EDU100 64-case training and 20-case held-out evaluation passed; official baseline not started**
 - GPU required now: **no — Phase 3B evaluation is complete**
-- Current checkpoint: Phase 3B held-out evaluation is persisted as notebook 1.4 version 2; Phase 3C visual-QC stage is implemented locally and ready to push
+- Current checkpoint: Phase 3C visual QC is running in Kaggle notebook `ImageCAS-180626-v2-EDU100-1.5-visual-qc`
 - Repository: <https://github.com/euteryu/ImageCAS-160826>
 - Kaggle dataset: <https://www.kaggle.com/datasets/xiaoweixumedicalai/imagecas>
 
@@ -167,11 +167,12 @@ The resumable implementation is `scripts/02_audit_archives.py`.
 
 ## Current next action
 
-Push the Phase 3C implementation, then create a fresh CPU-only Kaggle notebook,
-attach only notebook 1.4 version 2, and submit
-`kaggle/13_generate_edu100_visual_qc.sh` with Save & Run All. Accept it only if
-the final `EDU100_VISUAL_QC_REPORT` has `status: PASS`, then manually review the
-selected red-reference/cyan-prediction montages.
+Wait for the CPU-only notebook
+`ImageCAS-180626-v2-EDU100-1.5-visual-qc` Save & Run All job to finish. Accept
+it only if the final `EDU100_VISUAL_QC_REPORT` has `status: PASS`, then manually
+review the selected red-reference/cyan-prediction montages. Expected runtime is
+approximately 3–10 minutes, allowing up to 15 minutes for Kaggle startup and
+package installation variability.
 
 ## Known open work
 
@@ -182,6 +183,15 @@ selected red-reference/cyan-prediction montages.
 - Treat Gate A as an accepted-risk waiver, never as passed; reinstate the resumable audit if later failures suggest bad input data.
 
 ## Run notes
+
+### 2026-08-17 — EDU100 Phase 3C visual-QC notebook launched
+
+The project owner created and started the CPU-only Save & Run All notebook
+`ImageCAS-180626-v2-EDU100-1.5-visual-qc` after attaching notebook 1.4 saved
+version 2. The Phase 3C implementation had already been pushed to GitHub main
+as commit `69dca36`. No official ImageCAS dataset attachment or GPU is required
+for this stage. Await the final `EDU100_VISUAL_QC_REPORT` and generated montage
+names; do not infer a pass merely from successful notebook startup.
 
 ### 2026-08-17 — EDU100 Phase 3C visual-QC stage implemented
 
