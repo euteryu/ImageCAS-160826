@@ -7,7 +7,7 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 - Phase: IMG-CAS-001 — dataset discovery and audit
 - Training status: **one-epoch 20-case engineering smoke test passed; official baseline not started**
 - GPU required now: **no**
-- Current checkpoint: EDU100 preprocessing passed; prepare the one-T4 learning-curve training stage
+- Current checkpoint: EDU100 preprocessing passed; run one 64-case model on a T4
 - Repository: <https://github.com/euteryu/ImageCAS-160826>
 - Kaggle dataset: <https://www.kaggle.com/datasets/xiaoweixumedicalai/imagecas>
 
@@ -186,9 +186,18 @@ must show 64 fingerprint cases, 80 preprocessed cases, and zero test cases.
 
 ## Run notes
 
-### 2026-08-17 — EDU100 Phase 3A 16-case training stage implemented
+### 2026-08-17 — Learning curve simplified to one 64-case model
 
-The first learning-curve training job is packaged as an unattended one-T4
+The project owner chose to skip the separate 16- and 32-case learning-curve
+models and train directly on all 64 training cases. This is a scope decision,
+not a Kaggle memory or disk workaround. The fixed 16-case validation set remains
+unchanged, and the 20 selected test cases remain isolated. Phase 3A now runs
+fold 2 with `nnUNetTrainer_50epochs`; the nested split metadata is retained for
+auditability, but folds 0 and 1 will not be trained.
+
+### 2026-08-17 — Superseded initial Phase 3A 16-case design
+
+The initially proposed learning-curve training job was packaged as an unattended one-T4
 stage. It validates and symlinks the persisted 12 GB Phase 2 output without
 copying it, installs the fixed nested splits as nnU-Net folds, rechecks test
 isolation and all 80 case payloads, executes a real CUDA kernel, and trains fold
@@ -196,7 +205,8 @@ isolation and all 80 case payloads, executes a real CUDA kernel, and trains fold
 `nnUNetTrainer_50epochs`. Final acceptance requires non-empty final and best
 checkpoints, 16 validation predictions, and a validation summary.
 
-The measured smoke epoch was about five minutes, so this stage is expected to
+This design was superseded before execution by the decision above to train only
+the 64-case model. The measured smoke epoch was about five minutes, so a 50-epoch stage is expected to
 take roughly 4–5 hours plus setup and final validation. It must use Save & Run
 All on one T4. The 32- and 64-case folds remain separate future saved jobs so a
 single Kaggle timeout cannot discard the entire learning curve.

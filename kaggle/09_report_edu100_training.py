@@ -7,21 +7,22 @@ from pathlib import Path
 
 DATASET_NAME = "Dataset598_ImageCAS_EDU100"
 TRAINER = "nnUNetTrainer_50epochs"
+FOLD = 2
 
 
 def main() -> None:
     result_root = Path(os.environ["nnUNet_results"]) / DATASET_NAME
     trainer_root = result_root / f"{TRAINER}__nnUNetPlans__3d_fullres"
-    fold = trainer_root / "fold_0"
+    fold = trainer_root / f"fold_{FOLD}"
     split_path = Path(os.environ["nnUNet_preprocessed"]) / DATASET_NAME / "splits_final.json"
-    split = json.loads(split_path.read_text(encoding="utf-8"))[0]
+    split = json.loads(split_path.read_text(encoding="utf-8"))[FOLD]
     required = [fold / "checkpoint_final.pth", fold / "checkpoint_best.pth"]
     missing = [str(path) for path in required if not path.is_file() or path.stat().st_size == 0]
     validation = fold / "validation"
     predictions = sorted(validation.glob("case*.nii.gz"))
     summary_path = validation / "summary.json"
     checks = {
-        "training_cases": len(split["train"]) == 16,
+        "training_cases": len(split["train"]) == 64,
         "validation_cases": len(split["val"]) == 16,
         "checkpoints": not missing,
         "validation_predictions": len(predictions) == 16,
@@ -34,7 +35,7 @@ def main() -> None:
         "dataset": DATASET_NAME,
         "trainer": TRAINER,
         "configuration": "3d_fullres",
-        "fold": 0,
+        "fold": FOLD,
         "epochs": 50,
         "training_case_count": len(split["train"]),
         "validation_case_count": len(split["val"]),
@@ -47,9 +48,9 @@ def main() -> None:
         else None,
         "foreground_mean": summary.get("foreground_mean"),
     }
-    output = Path("/kaggle/working/edu100_train16_report.json")
+    output = Path("/kaggle/working/edu100_train64_report.json")
     output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print("EDU100_TRAIN16_REPORT")
+    print("EDU100_TRAIN64_REPORT")
     print(json.dumps(report, indent=2, sort_keys=True))
     if report["status"] != "PASS":
         raise SystemExit(1)
