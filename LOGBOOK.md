@@ -7,7 +7,7 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 - Phase: IMG-CAS-001 — dataset discovery and audit
 - Training status: **EDU100 64-case training and 20-case held-out evaluation passed; official baseline not started**
 - GPU required now: **no — Phase 3B evaluation is complete**
-- Current checkpoint: Phase 3C visual QC is running in Kaggle notebook `ImageCAS-180626-v2-EDU100-1.5-visual-qc`
+- Current checkpoint: Phase 3C automated visual-QC generation passed; manually review four persisted Kaggle montages
 - Repository: <https://github.com/euteryu/ImageCAS-160826>
 - Kaggle dataset: <https://www.kaggle.com/datasets/xiaoweixumedicalai/imagecas>
 
@@ -167,12 +167,13 @@ The resumable implementation is `scripts/02_audit_archives.py`.
 
 ## Current next action
 
-Wait for the CPU-only notebook
-`ImageCAS-180626-v2-EDU100-1.5-visual-qc` Save & Run All job to finish. Accept
-it only if the final `EDU100_VISUAL_QC_REPORT` has `status: PASS`, then manually
-review the selected red-reference/cyan-prediction montages. Expected runtime is
-approximately 3–10 minutes, allowing up to 15 minutes for Kaggle startup and
-package installation variability.
+In Kaggle, manually review the four persisted red-reference/cyan-prediction
+montages for `case0752`, `case0764`, `case0768`, and `case0770`. Do not download
+or upload these patient-derived images. Record whether boundaries broadly
+follow visible coronary vessels, where false-positive branches or missed
+segments occur, whether fragmentation is visually credible, and whether any
+obvious image/reference alignment problem exists. Do not tune the accepted
+model or checkpoint from this held-out review.
 
 ## Known open work
 
@@ -183,6 +184,30 @@ package installation variability.
 - Treat Gate A as an accepted-risk waiver, never as passed; reinstate the resumable audit if later failures suggest bad input data.
 
 ## Run notes
+
+### 2026-08-17 — EDU100 Phase 3C automated visual-QC generation passed
+
+Notebook `ImageCAS-180626-v2-EDU100-1.5-visual-qc` completed the CPU-only
+visual-QC stage with `status: PASS`. It generated four montages in 3.4 MB:
+
+```text
+case0752  seeded-random review case
+case0764  highest-Dice control (Dice 0.810980, HD95 8.848 mm)
+case0768  lowest Dice, highest HD95, lowest clDice, and highest component error
+case0770  seeded-random review case
+```
+
+The multiple adverse criteria correctly collapsed onto `case0768`: Dice
+0.619977, HD95 58.431 mm, clDice 0.683003, and absolute component-count error
+43. Its prediction had 45 connected components versus 2 in the reference.
+The source checkpoint SHA-256 remained
+`780eba53bedcdbd4797801eee88a3924d67785236f62ea1514b447e0ac7ddbb9`.
+
+Decision: accept automated montage generation. The remaining Phase 3C gate is
+human review of the four PNGs directly in Kaggle. Do not download or upload the
+patient-derived montages; return only non-identifying qualitative observations
+for the logbook. This review is descriptive and must not drive model or
+checkpoint selection.
 
 ### 2026-08-17 — EDU100 Phase 3C visual-QC notebook launched
 
