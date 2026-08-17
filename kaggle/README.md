@@ -6,7 +6,24 @@ This directory contains the code intended for Kaggle notebook execution.
 
 Do not paste multiline Python implementations into Kaggle cells. Pull the repository, then run a committed script with a one-line cell. This avoids indentation damage during copy/paste and keeps notebook logic version-controlled.
 
-## Current next command
+## Current next command: EDU100 16-case training
+
+In a fresh **T4 GPU** notebook, attach the successful Phase 2 notebook output
+and run the repository bootstrap followed by:
+
+```python
+!bash /kaggle/working/ImageCAS-160826/kaggle/08_train_edu100_16.sh
+```
+
+This creates a writable metadata view over the attached 12 GB read-only
+preprocessed dataset, installs the fixed nested 16/32/64 splits, verifies a real
+CUDA kernel, and trains fold 0 (16 training, 16 fixed validation cases) for 50
+epochs. Submit it with **Save & Run All**; it is expected to take roughly 4–5
+hours based on the measured one-epoch smoke run. The final report must be PASS
+with two checkpoints and 16 validation predictions. Folds 1 and 2 are later
+saved runs, not part of this notebook.
+
+## Earlier data-preparation commands
 
 ```python
 !bash /kaggle/working/ImageCAS-160826/kaggle/04_build_edu100_raw.sh

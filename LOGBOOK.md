@@ -7,7 +7,7 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 - Phase: IMG-CAS-001 — dataset discovery and audit
 - Training status: **one-epoch 20-case engineering smoke test passed; official baseline not started**
 - GPU required now: **no**
-- Current checkpoint: design a storage-bounded 100-case educational baseline (64 train, 16 validation, 20 held-out test)
+- Current checkpoint: EDU100 preprocessing passed; prepare the one-T4 learning-curve training stage
 - Repository: <https://github.com/euteryu/ImageCAS-160826>
 - Kaggle dataset: <https://www.kaggle.com/datasets/xiaoweixumedicalai/imagecas>
 
@@ -185,6 +185,42 @@ must show 64 fingerprint cases, 80 preprocessed cases, and zero test cases.
 - Treat Gate A as an accepted-risk waiver, never as passed; reinstate the resumable audit if later failures suggest bad input data.
 
 ## Run notes
+
+### 2026-08-17 — EDU100 Phase 3A 16-case training stage implemented
+
+The first learning-curve training job is packaged as an unattended one-T4
+stage. It validates and symlinks the persisted 12 GB Phase 2 output without
+copying it, installs the fixed nested splits as nnU-Net folds, rechecks test
+isolation and all 80 case payloads, executes a real CUDA kernel, and trains fold
+0 with 16 training and the fixed 16 validation cases using
+`nnUNetTrainer_50epochs`. Final acceptance requires non-empty final and best
+checkpoints, 16 validation predictions, and a validation summary.
+
+The measured smoke epoch was about five minutes, so this stage is expected to
+take roughly 4–5 hours plus setup and final validation. It must use Save & Run
+All on one T4. The 32- and 64-case folds remain separate future saved jobs so a
+single Kaggle timeout cannot discard the entire learning curve.
+
+### 2026-08-17 — EDU100 Phase 2 preprocessing accepted
+
+The corrected report was run against the persisted 12 GB Phase 2 notebook
+output and passed all acceptance checks:
+
+```text
+training fingerprint cases: 64
+development preprocessed cases: 80
+test cases in training/development views: 0
+configuration: 3d_fullres
+target spacing: 0.5 × 0.34765625 × 0.34765625 mm
+patch size: 96 × 160 × 160
+batch size: 2
+status: PASS
+```
+
+The installed nnU-Net 2.8.1 output used Blosc2 `.b2nd` arrays; the reporting
+code now supports that current format as well as `.npz` and `.npy`. Decision:
+accept Phase 2, retain its saved notebook output as the read-only input to
+Phase 3, and proceed to the one-T4 learning-curve training design.
 
 ### 2026-08-17 — EDU100 Phase 2 preprocessing completed; reporter format bug found
 
