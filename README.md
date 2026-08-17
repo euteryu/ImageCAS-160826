@@ -7,6 +7,8 @@ For reusable guidance on storage-bounded, unattended Kaggle projects, see the
 [Kaggle Machine-Learning Playbook](docs/KAGGLE_ML_PLAYBOOK.md).
 For the concrete meaning of ImageCAS spacing, CT normalization, and categorical
 mask resampling, see [ImageCAS nnU-Net Preprocessing Explained](docs/IMAGECAS_NNUNET_PREPROCESSING.md).
+The completed 64/16/20 educational experiment is documented in the
+[ImageCAS EDU100 Educational Baseline Report](docs/EDU100_BASELINE_REPORT.md).
 
 ## Current scope: IMG-CAS-001
 

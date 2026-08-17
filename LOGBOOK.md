@@ -7,7 +7,7 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 - Phase: IMG-CAS-001 — dataset discovery and audit
 - Training status: **EDU100 64-case training and 20-case held-out evaluation passed; official baseline not started**
 - GPU required now: **no — Phase 3B evaluation is complete**
-- Current checkpoint: Phase 3C automated and independent visual QC passed; EDU100 baseline is complete
+- Current checkpoint: EDU100 baseline is complete and its final report is documented in `docs/EDU100_BASELINE_REPORT.md`
 - Repository: <https://github.com/euteryu/ImageCAS-160826>
 - Kaggle dataset: <https://www.kaggle.com/datasets/xiaoweixumedicalai/imagecas>
 
@@ -167,10 +167,10 @@ The resumable implementation is `scripts/02_audit_archives.py`.
 
 ## Current next action
 
-Close the EDU100 educational-baseline milestone without tuning from the held-out
-results. Preserve notebook versions 1.3, 1.4 version 2, and 1.5 as the durable
-Kaggle evidence. Before any new scientific experiment, define a new protocol
-and objective rather than iterating on these held-out cases.
+Preserve notebook versions 1.1 through 1.5 as durable Kaggle evidence. Treat the
+EDU100 milestone as closed. Before any new scientific experiment, define a new
+objective, evaluation protocol, and data split rather than iterating on these
+held-out cases.
 
 ## Known open work
 
@@ -180,6 +180,20 @@ and objective rather than iterating on these held-out cases.
 - Treat Gate A as an accepted-risk waiver, never as passed; reinstate the resumable audit if later failures suggest bad input data.
 
 ## Run notes
+
+### 2026-08-17 — Final EDU100 baseline report completed
+
+The completed educational experiment was consolidated into
+`docs/EDU100_BASELINE_REPORT.md`. The report records the fixed 64/16/20 split,
+training-only preprocessing fit, leakage controls, nnU-Net configuration,
+validation and held-out metrics, all per-case Dice values, independent visual-QC
+findings, storage measurements, reproducibility entry points, and limitations.
+
+The report explicitly distinguishes this result from the official 250-case
+ImageCAS benchmark and records the full-audit accepted-risk waiver. It closes
+the EDU100 milestone without proposing post-hoc tuning from the held-out cases.
+The README links to the report. Decision: preserve notebooks 1.1–1.5 and require
+a new predefined protocol before any follow-up model experiment.
 
 ### 2026-08-17 — EDU100 Phase 3C independent visual review completed
 
