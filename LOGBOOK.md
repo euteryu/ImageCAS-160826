@@ -216,8 +216,13 @@ distal branches.
 
 Decision: accept Phase 3C and close the fixed 64-train/16-validation/20-test
 EDU100 educational baseline. Do not alter the accepted model or checkpoint
-based on this held-out review. Only textual observations are committed; the
-patient-derived montage files remain outside Git.
+based on this held-out review. Only textual observations are committed.
+
+At the project owner's explicit request and authorization, local review copies
+of the four montage PNGs were placed at
+`artifacts/qc/montages/edu100_phase3c/`. This directory is covered by the
+repository's `artifacts/qc/montages/` ignore rule; `git check-ignore` confirmed
+all four files are excluded. They must never be staged, committed, or pushed.
 
 ### 2026-08-17 — EDU100 Phase 3C automated visual-QC generation passed
 
