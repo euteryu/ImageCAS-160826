@@ -7,11 +7,11 @@ import re
 
 
 DATASET_NAME = "Dataset598_ImageCAS_EDU100"
-CASE_PAYLOAD_RE = re.compile(r"^(case\d{4})(?:\.npz|\.npy)$")
+CASE_PAYLOAD_RE = re.compile(r"^(case\d{4})(?:\.npz|\.npy|\.b2nd)$")
 
 
 def preprocessed_case_ids(data_folder: Path) -> set[str]:
-    """Find cases in either packed (.npz) or unpacked (.npy) nnU-Net form."""
+    """Find cases in supported nnU-Net payload formats, excluding segmentations."""
     case_ids: set[str] = set()
     for path in data_folder.iterdir():
         match = CASE_PAYLOAD_RE.fullmatch(path.name)

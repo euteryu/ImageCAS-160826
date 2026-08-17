@@ -13,9 +13,11 @@ def test_preprocessed_case_ids_accepts_packed_and_unpacked_cases(tmp_path):
     (tmp_path / "case0001.npz").touch()
     (tmp_path / "case0002.npy").touch()
     (tmp_path / "case0002_seg.npy").touch()
-    (tmp_path / "case0003.pkl").touch()
+    (tmp_path / "case0003.b2nd").touch()
+    (tmp_path / "case0003_seg.b2nd").touch()
+    (tmp_path / "case0004.pkl").touch()
 
-    assert REPORT.preprocessed_case_ids(tmp_path) == {"case0001", "case0002"}
+    assert REPORT.preprocessed_case_ids(tmp_path) == {"case0001", "case0002", "case0003"}
 
 
 def test_preprocessed_case_ids_deduplicates_both_representations(tmp_path):

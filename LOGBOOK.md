@@ -197,10 +197,11 @@ patch size `96 × 160 × 160`, and batch size 2.
 
 The final custom report nevertheless printed `development_preprocessed_case_count:
 0` and `status: FAIL`. This was a reporting defect, not an nnU-Net preprocessing
-failure: the reporter counted only packed `.npz` payloads, while the installed
-nnU-Net workflow exposed unpacked per-case `.npy` payloads after preprocessing.
-The reporter now recognizes both packed and unpacked forms, ignores companion
-`_seg.npy` arrays, and deduplicates a case if both representations exist.
+failure: the reporter counted only legacy `.npz` payloads, while the installed
+nnU-Net 2.8.1 workflow stored each data and segmentation array in Blosc2
+`.b2nd` files. Kaggle preserved the complete output at 12 GB. The reporter now
+recognizes `.npz`, `.npy`, and `.b2nd` data payloads, ignores companion
+`_seg` arrays, and deduplicates a case if multiple representations exist.
 
 Decision: do not repeat the 47-minute preprocessing step if the Kaggle working
 session still contains the completed output. Pull this fix and rerun only the
