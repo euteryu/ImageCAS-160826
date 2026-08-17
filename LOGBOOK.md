@@ -5,9 +5,9 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 ## Current status
 
 - Phase: IMG-CAS-001 — dataset discovery and audit
-- Training status: **50-epoch 64-case EDU100 training passed; official baseline not started**
-- GPU required now: **yes — one T4 for held-out inference**
-- Current checkpoint: Phase 3B held-out evaluation implemented locally; run it on the untouched 20-case test subset
+- Training status: **EDU100 64-case training and 20-case held-out evaluation passed; official baseline not started**
+- GPU required now: **no — Phase 3B evaluation is complete**
+- Current checkpoint: Phase 3B held-out evaluation is persisted as notebook 1.4 version 2; Phase 3C visual-QC stage is implemented locally and ready to push
 - Repository: <https://github.com/euteryu/ImageCAS-160826>
 - Kaggle dataset: <https://www.kaggle.com/datasets/xiaoweixumedicalai/imagecas>
 
@@ -167,17 +167,14 @@ The resumable implementation is `scripts/02_audit_archives.py`.
 
 ## Current next action
 
-Persist and attach the successful Phase 3A notebook output in a fresh T4
-notebook together with the official ImageCAS dataset. Pull the Phase 3B code and
-submit `kaggle/10_evaluate_edu100_test.sh` using Save & Run All. Accept the
-stage only if its final report shows 20 predictions, 20 gated references,
-matching physical geometry, overlap/surface/topology metrics, and `status:
-PASS`.
+Push the Phase 3C implementation, then create a fresh CPU-only Kaggle notebook,
+attach only notebook 1.4 version 2, and submit
+`kaggle/13_generate_edu100_visual_qc.sh` with Save & Run All. Accept it only if
+the final `EDU100_VISUAL_QC_REPORT` has `status: PASS`, then manually review the
+selected red-reference/cyan-prediction montages.
 
 ## Known open work
 
-- Persist the accepted 64-case, 50-epoch EDU100 training output as a read-only Kaggle notebook output.
-- Run and review held-out inference and evaluation for the untouched 20-case test subset.
 - Keep enforcing the rule that all selected official test cases remain absent from fingerprinting, planning, training preprocessing, training, and model selection.
 - Select random and statistical-outlier cases for visual QC.
 - Re-extract only selected cases to generate montages.
@@ -185,6 +182,91 @@ PASS`.
 - Treat Gate A as an accepted-risk waiver, never as passed; reinstate the resumable audit if later failures suggest bad input data.
 
 ## Run notes
+
+### 2026-08-17 — EDU100 Phase 3C visual-QC stage implemented
+
+A separate CPU-only visual-QC stage was added for the persisted notebook 1.4
+version 2 output. It requires no official ImageCAS archive attachment and does
+not rerun inference or metrics. It discovers exactly one complete
+`edu100_test` attachment and rejects any source report other than the accepted
+20-case `PASS` result.
+
+The deterministic selection includes the lowest Dice, highest HD95, lowest
+clDice, highest absolute component-count error, highest-Dice control, and two
+seeded-random held-out cases. Duplicate metric extremes are merged. Each
+montage displays the maximum combined reference/prediction foreground slice in
+the sagittal, coronal, and axial planes, with the ImageCAS binary
+coronary-artery reference boundary in red and the prediction boundary in cyan.
+The report preserves selection reasons, source checkpoint SHA-256, and per-case
+metrics.
+
+Patient-derived PNGs are written only to
+`/kaggle/working/edu100_visual_qc/montages`; none are created locally or added
+to Git. The one-line entry point is
+`kaggle/13_generate_edu100_visual_qc.sh`. This is review-only: the held-out
+images must not be used to tune the accepted model or checkpoint.
+
+Local verification: **28 synthetic tests passed**; Python compilation, shell
+syntax, and Git whitespace checks passed. Ruff was unavailable locally.
+Decision: push the implementation, then run it in a new Save & Run All notebook
+with accelerator None and only notebook 1.4 version 2 attached.
+
+### 2026-08-17 — EDU100 Phase 3B held-out evaluation passed
+
+The isolated T4 evaluation completed as notebook 1.4, saved version 2, for all
+20 untouched EDU100 held-out test
+cases (`case0751`–`case0770`) using fold 2, configuration `3d_fullres`, trainer
+`nnUNetTrainer_50epochs`, and `checkpoint_best.pth`. The checkpoint SHA-256 was
+`780eba53bedcdbd4797801eee88a3924d67785236f62ea1514b447e0ac7ddbb9`.
+
+Observed aggregate metrics:
+
+```text
+Dice:                         mean 0.7393319414, median 0.7449195543
+IoU:                          mean 0.5890245575, median 0.5935469954
+surface Dice at 1 mm:         mean 0.8400824923, median 0.8525089656
+HD95:                         mean 21.5099630955 mm, median 19.1561040672 mm
+mean surface distance:        mean 3.1153813912 mm, median 2.6458581492 mm
+clDice:                       mean 0.8142099568, median 0.8206520986
+absolute component error:     mean 16.5, median 14.5
+predicted largest component:  mean 0.5635069672, median 0.5271636046
+reference largest component:  mean 0.6798381297, median 0.6370807542
+```
+
+Per-case Dice ranged from 0.619977 (`case0768`) to 0.810980 (`case0764`). All
+acceptance checks passed: correct official test cases and counts, predictions
+created before references were opened, binary masks, physical geometry,
+checkpoint identity, and overlap, surface, and topology metrics. The final
+report status was `PASS`.
+
+After completion, `/kaggle/working/edu100_test` occupied 1.7 GB,
+`/kaggle/working/nnUNet_results/Dataset598_ImageCAS_EDU100` occupied 4 KB, and
+the 20 GB writable filesystem had 18 GB available (9% used).
+
+The successful Save Version run means its output is already persisted as a
+read-only Kaggle notebook-version output; no repeat run or additional save is
+needed.
+
+Decision: accept Phase 3B as the final held-out result for the educational
+64-train/16-validation/20-test experiment. This is not the official 250-case
+ImageCAS benchmark and must not be described as one. Proceed to a separate
+visual-QC stage; do not tune the model or checkpoint from these test results.
+
+### 2026-08-17 — Phase 3B first launch stopped: official dataset not attached
+
+The fresh T4 evaluation notebook had the saved Phase 3A/1.3 model output
+attached, but not the official `xiaoweixumedicalai/imagecas` Kaggle dataset.
+Installation, nnU-Net/PyTorch checks, the Tesla T4 check, and an executable CUDA
+kernel test passed. Input discovery then stopped with:
+
+```text
+RuntimeError: Expected one imageCAS_data_split.xlsx, found 0: []
+```
+
+This was an attachment/configuration issue, not a model or evaluation failure.
+No held-out inference ran and no test reference masks were extracted. Decision:
+keep the 1.3 output attached, additionally attach the official ImageCAS dataset,
+restart the session, and rerun `kaggle/10_evaluate_edu100_test.sh`.
 
 ### 2026-08-17 — Isolated EDU100 Phase 3B evaluation implemented
 

@@ -6,7 +6,26 @@ This directory contains the code intended for Kaggle notebook execution.
 
 Do not paste multiline Python implementations into Kaggle cells. Pull the repository, then run a committed script with a one-line cell. This avoids indentation damage during copy/paste and keeps notebook logic version-controlled.
 
-## Current next command: EDU100 held-out test evaluation
+## Current next command: EDU100 held-out visual QC
+
+Create a fresh notebook with **Accelerator: None** and Internet On. Attach only
+notebook 1.4, saved Version 2, as a read-only input. Clone this repository and
+run:
+
+```python
+!bash /kaggle/working/ImageCAS-160826/kaggle/13_generate_edu100_visual_qc.sh
+```
+
+The stage reads the accepted Phase 3B images, references, predictions, and
+per-case metrics from the attachment. It deterministically selects the lowest
+Dice, highest HD95, lowest clDice, highest component-count error, highest-Dice
+control, and two seeded-random cases, merging duplicates. Montages use red for
+the reference boundary and cyan for the prediction boundary. Patient-derived
+PNG files are written only beneath `/kaggle/working/edu100_visual_qc`; never add
+them to Git. Submit with **Save & Run All** and accept only a final
+`EDU100_VISUAL_QC_REPORT` with `status: PASS`.
+
+## Completed EDU100 held-out test evaluation
 
 Persist the successful Phase 3A training notebook output. In a fresh **T4 GPU**
 notebook, attach that output and the official ImageCAS dataset, then run the
