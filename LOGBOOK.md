@@ -7,7 +7,7 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 - Phase: IMG-CAS-001 — dataset discovery and audit
 - Training status: **EDU100 64-case training and 20-case held-out evaluation passed; official baseline not started**
 - GPU required now: **no — Phase 3B evaluation is complete**
-- Current checkpoint: Phase 3C automated visual-QC generation passed; manually review four persisted Kaggle montages
+- Current checkpoint: Phase 3C automated and independent visual QC passed; EDU100 baseline is complete
 - Repository: <https://github.com/euteryu/ImageCAS-160826>
 - Kaggle dataset: <https://www.kaggle.com/datasets/xiaoweixumedicalai/imagecas>
 
@@ -167,23 +167,57 @@ The resumable implementation is `scripts/02_audit_archives.py`.
 
 ## Current next action
 
-In Kaggle, manually review the four persisted red-reference/cyan-prediction
-montages for `case0752`, `case0764`, `case0768`, and `case0770`. Do not download
-or upload these patient-derived images. Record whether boundaries broadly
-follow visible coronary vessels, where false-positive branches or missed
-segments occur, whether fragmentation is visually credible, and whether any
-obvious image/reference alignment problem exists. Do not tune the accepted
-model or checkpoint from this held-out review.
+Close the EDU100 educational-baseline milestone without tuning from the held-out
+results. Preserve notebook versions 1.3, 1.4 version 2, and 1.5 as the durable
+Kaggle evidence. Before any new scientific experiment, define a new protocol
+and objective rather than iterating on these held-out cases.
 
 ## Known open work
 
 - Keep enforcing the rule that all selected official test cases remain absent from fingerprinting, planning, training preprocessing, training, and model selection.
-- Select random and statistical-outlier cases for visual QC.
-- Re-extract only selected cases to generate montages.
-- Review annotation semantics and outliers manually.
+- Define and preregister the objective and data split before starting any follow-up experiment.
+- Keep the stronger annotation-semantics question open; the completed screening montages do not resolve it fully.
 - Treat Gate A as an accepted-risk waiver, never as passed; reinstate the resumable audit if later failures suggest bad input data.
 
 ## Run notes
+
+### 2026-08-17 — EDU100 Phase 3C independent visual review completed
+
+Codex independently inspected the four original-resolution Phase 3C montages.
+Red reference and cyan prediction contours were compared in the selected
+sagittal, coronal, and axial planes. No gross CT/overlay displacement or other
+obvious physical-registration failure was visible in any reviewed case.
+
+Case-level observations:
+
+- `case0752`: broadly concordant principal contours, with small red-only missed
+  segments and isolated cyan-only fragments. The visible discrepancy is
+  moderate and consistent with Dice 0.736 and HD95 22.1 mm.
+- `case0764`: strongest overall visible agreement, particularly along the main
+  elongated contours. Some cyan-only peripheral fragments and local boundary
+  offsets remain. This is a credible highest-Dice control rather than a perfect
+  segmentation.
+- `case0768`: visibly weakest case. Although portions of the principal contours
+  overlap, multiple cyan-only remote fragments and red-only missed regions are
+  visible across planes. This qualitatively supports the worst Dice, HD95,
+  clDice, and component-count results and the 45 predicted versus 2 reference
+  components.
+- `case0770`: good agreement along the dominant visible contours, with several
+  small peripheral cyan-only fragments and minor local under/over-segmentation.
+  Its qualitative appearance is consistent with Dice 0.787 and low HD95.
+
+Overall interpretation: the model learned meaningful coronary-reference-mask
+localization and shape, but predictions remain over-fragmented and contain
+scattered distant false positives. The evidence does not establish detailed
+annotation semantics beyond the existing term “ImageCAS binary
+coronary-artery reference mask.” The three-plane, one-slice-per-plane montages
+are useful screening views but cannot fully characterize 3D continuity or all
+distal branches.
+
+Decision: accept Phase 3C and close the fixed 64-train/16-validation/20-test
+EDU100 educational baseline. Do not alter the accepted model or checkpoint
+based on this held-out review. Only textual observations are committed; the
+patient-derived montage files remain outside Git.
 
 ### 2026-08-17 — EDU100 Phase 3C automated visual-QC generation passed
 
