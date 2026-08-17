@@ -66,3 +66,23 @@ def extract_case(archive: Path, entries: dict[str, str], output_dir: Path) -> tu
         raise RuntimeError(f"Unexpected extraction result for {entries}")
     return image_matches[0], mask_matches[0]
 
+
+def extract_case_member(
+    archive: Path, entries: dict[str, str], role: str, output_dir: Path
+) -> Path:
+    """Extract only one member of a case pair (``img`` or ``label``)."""
+    if role not in {"img", "label"}:
+        raise ValueError("role must be 'img' or 'label'")
+    entry = entries[role]
+    process = subprocess.run(
+        [seven_zip(), "x", "-y", f"-o{output_dir}", str(archive), entry],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if process.returncode != 0:
+        raise RuntimeError(f"Extraction failed:\n{process.stdout}\n{process.stderr}")
+    matches = list(output_dir.rglob(Path(entry).name))
+    if len(matches) != 1:
+        raise RuntimeError(f"Unexpected extraction result for {entry}: {matches}")
+    return matches[0]

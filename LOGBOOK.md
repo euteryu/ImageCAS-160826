@@ -5,9 +5,9 @@ This is the human-readable record of what we did, what Kaggle showed us, why the
 ## Current status
 
 - Phase: IMG-CAS-001 — dataset discovery and audit
-- Training status: **one-epoch 20-case engineering smoke test passed; official baseline not started**
-- GPU required now: **no**
-- Current checkpoint: EDU100 preprocessing passed; run one 64-case model on a T4
+- Training status: **50-epoch 64-case EDU100 training passed; official baseline not started**
+- GPU required now: **yes — one T4 for held-out inference**
+- Current checkpoint: Phase 3B held-out evaluation implemented locally; run it on the untouched 20-case test subset
 - Repository: <https://github.com/euteryu/ImageCAS-160826>
 - Kaggle dataset: <https://www.kaggle.com/datasets/xiaoweixumedicalai/imagecas>
 
@@ -167,24 +167,99 @@ The resumable implementation is `scripts/02_audit_archives.py`.
 
 ## Current next action
 
-Push the committed strict Phase 2 implementation to GitHub. Create a fresh
-private CPU notebook, attach the successful output of
-`ImageCAS-180626-v2-EDU100-1.1` under Notebook Output Files, clone the repository,
-and submit `kaggle/05_preprocess_edu100.sh` using Save & Run All. Its final report
-must show 64 fingerprint cases, 80 preprocessed cases, and zero test cases.
+Persist and attach the successful Phase 3A notebook output in a fresh T4
+notebook together with the official ImageCAS dataset. Pull the Phase 3B code and
+submit `kaggle/10_evaluate_edu100_test.sh` using Save & Run All. Accept the
+stage only if its final report shows 20 predictions, 20 gated references,
+matching physical geometry, overlap/surface/topology metrics, and `status:
+PASS`.
 
 ## Known open work
 
-- Attach and validate the Phase 1 raw notebook output in a fresh CPU notebook.
-- Preprocess Dataset598, record its measured size, and persist the output read-only for training; use multiple shards only if measurements prove necessary.
-- Enforce an explicit rule preventing all official test cases, including the selected 20-case test subset, from entering fingerprinting, planning, or training preprocessing.
-- Train staged 16-, 32-, and 64-case learning runs and evaluate them against the same held-out 20-case test subset.
+- Persist the accepted 64-case, 50-epoch EDU100 training output as a read-only Kaggle notebook output.
+- Run and review held-out inference and evaluation for the untouched 20-case test subset.
+- Keep enforcing the rule that all selected official test cases remain absent from fingerprinting, planning, training preprocessing, training, and model selection.
 - Select random and statistical-outlier cases for visual QC.
 - Re-extract only selected cases to generate montages.
 - Review annotation semantics and outliers manually.
 - Treat Gate A as an accepted-risk waiver, never as passed; reinstate the resumable audit if later failures suggest bad input data.
 
 ## Run notes
+
+### 2026-08-17 — Isolated EDU100 Phase 3B evaluation implemented
+
+The held-out stage is implemented as
+`kaggle/10_evaluate_edu100_test.sh` for one fresh T4 Save & Run All notebook.
+Its only required attachments are the official ImageCAS dataset and the saved
+Phase 3A output containing the accepted fold-2 model. It symlinks the read-only
+model result rather than copying it and selects the same deterministic 20 cases
+from the official workbook `v2-latest` Split-1 test partition.
+
+The leakage boundary is executable rather than advisory:
+
+1. Extract only the 20 test images and record their source entries and hashes.
+2. Run `nnUNetv2_predict` with fold 2 and the already selected
+   `checkpoint_best.pth`; nnU-Net uses the frozen training-derived plan bundled
+   with the trained model.
+3. Refuse to extract any test reference unless predictions for all 20 expected
+   case IDs already exist.
+4. Extract the 20 ImageCAS binary coronary-artery reference masks and calculate
+   final metrics without any retraining, replanning, checkpoint selection, or
+   parameter tuning.
+
+The final report includes Dice, IoU, 1 mm surface Dice, HD95, mean symmetric
+surface distance, clDice, 26-connected component counts/errors, and largest
+component fractions. It verifies binary masks and exact prediction/reference
+shape and affine agreement. It also records the selected checkpoint SHA-256,
+per-case CSV metrics, and an explicit statement that this is a held-out EDU100
+subset result rather than the official 250-case ImageCAS benchmark.
+
+Local verification: **25 synthetic tests passed**; Python compilation, shell
+syntax, and Git whitespace checks passed. Ruff was unavailable locally. No
+patient data, predictions, references, or patient-derived images were created
+locally.
+
+Decision: persist the accepted Phase 3A output, push this implementation, and
+run Phase 3B with Save & Run All on one T4. Do not inspect test predictions or
+references between inference and the scripted final evaluation.
+
+### 2026-08-17 — EDU100 Phase 3A 64-case training accepted
+
+The one-T4 Phase 3A notebook completed fold 2 using
+`nnUNetTrainer_50epochs` and the `3d_fullres` configuration. The existing split
+file contained the three auditable nested splits; fold 2 correctly selected 64
+training cases and the fixed 16 validation cases. Training completed all 50
+epochs, with the final reported epoch taking 220.23 seconds, and nnU-Net then
+generated predictions for all 16 validation cases (`case0701`–`case0716`).
+
+Observed acceptance report:
+
+```text
+status: PASS
+training cases: 64
+validation cases: 16
+validation predictions: 16
+mean validation Dice: 0.7529778036966221
+mean validation IoU: 0.6065750250751691
+checkpoint_best: 235.01 MB
+checkpoint_final: 235.01 MB
+results directory: 473 MB
+/kaggle/working usage after completion: 474 MB of 20 GB (3%)
+```
+
+All five automated checks passed: training-case count, validation-case count,
+validation predictions, validation summary, and both required checkpoints.
+Validation inference ran from 16:49:42 to 17:34:28, approximately 44 minutes
+46 seconds. The validation Dice is a model-selection result for the fixed
+EDU100 validation subset, not a held-out test result or an official ImageCAS
+benchmark score.
+
+Decision: accept Phase 3A and persist its notebook output. Do not train folds 0
+or 1. Next, implement a separate held-out stage for the untouched 20 selected
+official Split-1 test cases, reusing the frozen training-derived plan and the
+accepted fold-2 checkpoint. Test labels may be opened only for final metric
+calculation and must not influence preprocessing fitting, checkpoint choice, or
+any other model-selection decision.
 
 ### 2026-08-17 — Learning curve simplified to one 64-case model
 
@@ -208,13 +283,13 @@ checkpoints, 16 validation predictions, and a validation summary.
 This design was superseded before execution by the decision above to train only
 the 64-case model. The measured smoke epoch was about five minutes, so a 50-epoch stage is expected to
 take roughly 4–5 hours plus setup and final validation. It must use Save & Run
-All on one T4. The 32- and 64-case folds remain separate future saved jobs so a
-single Kaggle timeout cannot discard the entire learning curve.
+All on one T4. Folds 0 and 1 are no longer planned runs.
 
 ### 2026-08-17 — EDU100 Phase 2 preprocessing accepted
 
 The corrected report was run against the persisted 12 GB Phase 2 notebook
-output and passed all acceptance checks:
+output `ImageCAS-180626-v2-EDU100-1.2-preprocess` and passed all acceptance
+checks:
 
 ```text
 training fingerprint cases: 64

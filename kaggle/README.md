@@ -6,23 +6,32 @@ This directory contains the code intended for Kaggle notebook execution.
 
 Do not paste multiline Python implementations into Kaggle cells. Pull the repository, then run a committed script with a one-line cell. This avoids indentation damage during copy/paste and keeps notebook logic version-controlled.
 
-## Current next command: EDU100 64-case training
+## Current next command: EDU100 held-out test evaluation
 
-In a fresh **T4 GPU** notebook, attach the successful Phase 2 notebook output
-and run the repository bootstrap followed by:
+Persist the successful Phase 3A training notebook output. In a fresh **T4 GPU**
+notebook, attach that output and the official ImageCAS dataset, then run the
+repository bootstrap followed by:
+
+```python
+!bash /kaggle/working/ImageCAS-160826/kaggle/10_evaluate_edu100_test.sh
+```
+
+This verifies a real CUDA kernel, stages only the 20 deterministically selected
+official Split-1 test images, and predicts them with the accepted fold-2
+`checkpoint_best.pth`. The script refuses to extract the 20 reference masks
+until all predictions exist. It then reports overlap (Dice/IoU), physical
+surface (1 mm surface Dice, HD95, mean surface distance), and topology (clDice,
+component counts, and largest-component fractions) metrics. Submit it with
+**Save & Run All**. The final report must be PASS and is an educational held-out
+subset result, not the official 250-case ImageCAS benchmark.
+
+## Earlier EDU100 training command
 
 ```python
 !bash /kaggle/working/ImageCAS-160826/kaggle/08_train_edu100_64.sh
 ```
 
-This creates a writable metadata view over the attached 12 GB read-only
-preprocessed dataset, installs the fixed nested 16/32/64 splits, verifies a real
-CUDA kernel, and trains fold 2 (64 training, 16 fixed validation cases) for 50
-epochs. Submit it with **Save & Run All**; it is expected to take roughly 4–5
-hours based on the measured one-epoch smoke run. The final report must be PASS
-with two checkpoints and 16 validation predictions. The 16- and 32-case
-learning-curve models are intentionally skipped; this stage trains the single
-largest educational model directly.
+This trains fold 2 with 64 training and 16 fixed validation cases for 50 epochs.
 
 ## Earlier data-preparation commands
 
