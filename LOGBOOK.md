@@ -181,6 +181,15 @@ held-out cases.
 
 ## Run notes
 
+### 2026-08-17 — Plain-language project summary added
+
+`PROJ_SUMMARY.md` now provides a short explanation of the completed EDU100
+experiment: what was trained, the principal validation and held-out results,
+what the model learned, its fragmentation weakness, project limitations, the
+Kaggle staging lesson, and requirements for any future experiment. The README
+links to this summary. It supplements rather than replaces the detailed
+technical baseline report and chronological logbook.
+
 ### 2026-08-17 — Final EDU100 baseline report completed
 
 The completed educational experiment was consolidated into
